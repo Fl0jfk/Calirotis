@@ -6,7 +6,7 @@ const roboto = Roboto({src: "./assets/fonts/Roboto/Roboto-Medium.ttf"})
 
 export const metadata: Metadata = {
   title: 'Calirotis',
-  description: 'Votre spécialiste en rotisserie',
+  description: 'Votre spécialiste en rotisserie, cochons de lait sur broche.',
   themeColor: "black",
   appleWebApp: true,
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
