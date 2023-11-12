@@ -2,7 +2,6 @@
 
 import { useData } from "@/app/contexts/data";
 
-
 function Meats(){
     const data = useData();
     return (
