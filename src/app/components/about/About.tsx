@@ -6,7 +6,7 @@ function About (){
             <h2 className="text-6xl">À propos de nous</h2>
             <div className="flex-col w-full flex items-center rounded-t-xl h-[800px]">
                 <div className="w-full h-[50%] sm:h-[30%] relative">
-                    <Image src="https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/IMG_1325+2.JPG" alt="Photo de profil" fill className="rounded-t-xl relative" style={{objectFit : "cover", objectPosition: "20% 20%"}}/>
+                    <Image src="https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/IMG_1325+2.JPG" alt="Photo de profil" fill className="rounded-t-xl relative" style={{objectFit : "cover", objectPosition: "50% 28%"}}/>
                 </div>
                 <div className="w-full h-[50%] sm:h-[70%] p-8 flex flex-col items-center text-xl bg-gray-700 rounded-b-xl overflow-y-scroll">
                     <p className="text-start w-full">Je suis Martin après plusieurs années en tant que traiteur au sein d&apos;une entreprise.</p>
