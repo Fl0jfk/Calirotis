@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       new Promise<string>((resolve, reject) => {
         transport.sendMail(mailOptions, function (err) {
           if (!err) {
-            resolve('Email envoyé');
+            resolve('Email envoyé !');
           } else {
             reject(err.message);
           }
