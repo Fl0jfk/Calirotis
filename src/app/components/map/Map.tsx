@@ -10,11 +10,11 @@ export default function Map() {
   return <MapKit/>;
   
   function MapKit(){
-    const center = useMemo(() => ({ lat: 49.408276, lng: 1.240513 }), []);
+    const center = useMemo(() => ({ lat: 49.231, lng: 1.222 }), []);
     const data = useData();
     
   return (
-      <GoogleMap zoom={10} center={center} mapContainerClassName="max-w-[800px] w-[50%] h-[450px] rounded-xl mx-auto sm:w-full" options={{ disableDefaultUI: true }}>
+      <GoogleMap zoom={9} center={center} mapContainerClassName="max-w-[800px] w-[50%] h-[450px] rounded-xl mx-auto sm:w-full" options={{ disableDefaultUI: true }}>
           {data.profile.logo&&<Marker position={center} icon={{url: data.profile.logo, scaledSize: new window.google.maps.Size(80, 80),}}/>}
       </GoogleMap>
     );
