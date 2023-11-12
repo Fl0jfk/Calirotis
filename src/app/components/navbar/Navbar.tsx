@@ -41,7 +41,7 @@ function Navbar({menuOpened, onLinkClick} :NavbarProps ){
                         }
                     </div>
                     <Link className='hover:scale-110' href="#meats" onClick={handleLinkClick} aria-label="Link to section Meats">Plats</Link>
-                    <Link className='hover:scale-110' href="#portfolio" onClick={handleLinkClick} aria-label="Link to section Portfolio">Portfolio</Link>
+                    <Link className='hover:scale-110' href="#occasions" onClick={handleLinkClick} aria-label="Link to section Occasions">Pourquoi faire appelle à nous ?</Link>
                     <Link className='hover:scale-110' href="#testimonials" onClick={handleLinkClick} aria-label="Link to section Testimonials">Témoignages</Link>
                     <Link className='hover:scale-110' href="#contact" onClick={handleLinkClick} aria-label="Link to section Contact">Contact</Link>
                 </motion.nav>
@@ -49,7 +49,7 @@ function Navbar({menuOpened, onLinkClick} :NavbarProps ){
             </AnimatePresence>
             <nav style={{background: `${bgMenuOpen}`}} className={`flex gap-6 text-2xl xl:mr-8 lg:mr-8 sm:hidden md:hidden z-[9]`}>
                 <Link className='hover:scale-110' href="#meats" aria-label="Link to section Meats">Plats</Link>
-                <Link className='hover:scale-110' href="#portfolio" aria-label="Link to section Portfolio">Portfolio</Link>
+                <Link className='hover:scale-110' href="#occasions" aria-label="Link to section Portfolio">Pourquoi faire appelle à nous ?</Link>
                 <Link className='hover:scale-110' href="#testimonials" aria-label="Link to section Testimonials">Témoignages</Link>
                 <Link className='hover:scale-110' href="#contact" aria-label="Link to section Contact">Contact</Link>
             </nav>

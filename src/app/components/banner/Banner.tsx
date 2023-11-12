@@ -2,7 +2,7 @@ import Image from "next/image";
 
 function Banner (){
     return (
-        <section className="w-full p-6 flex flex-col items-center gap-8 sm:p-12">
+        <section className="w-full p-6 flex flex-col items-center gap-8 sm:p-12" id="occasions">
             <h2 className="text-6xl">Pour toutes vos occasions</h2>
             <div className="flex w-full gap-6 sm:flex-col">
                 <div className="w-full rounded-xl flex flex-col items-center gap-4 bg-gray-800 p-4 h-[350px] cursor-pointer hover:scale-110 justify-between">
