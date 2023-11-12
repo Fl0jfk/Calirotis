@@ -32,7 +32,7 @@ function Header(){
             variants={{ visible: { y: 0 }, hidden: { y: "-100%" }}} 
             animate={hidden ? "hidden" : "visible"}
             transition={{duration: 0.35, ease: "easeInOut"}}
-            className={`flex p-4 justify-between w-full md:fixed sm:fixed z-[12] md:mb-[100px] md:bg-[#000000] sm:bg-[#000000] ${opacityMenu}`}>
+            className={`flex p-4 justify-between w-full md:fixed sm:fixed z-[12] md:mb-[100px] md:bg-[#000000] sm:bg-[#000000] max-w-[1000px] ${opacityMenu}`}>
                 <div className='w-2/12 h-[100px] md:h-[40px] sm:h-[20px] flex items-center'>
                     {data.profile.logo && 
                         <Image src={data.profile.logo} alt='Logo de calirotis' width={50} height={50} className='cursor-pointer z-[8] mb-[5px]' onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>

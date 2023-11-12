@@ -16,12 +16,12 @@ export default function Home() {
       </Head>
       <DataProvider>
         <Header/>
-        <main className="flex flex-col w-full items-center mt-[100px]"> 
-            <Slider/>
-            <Meats/>
-            <Banner/>
-            <About/>
-            <Contact/>
+        <main className="flex flex-col w-full items-center mt-[60px] gap-8"> 
+          <Slider/>
+          <Meats/>
+          <Banner/>
+          <About/>
+          <Contact/>
         </main>
         <Footer/> 
       </DataProvider>  

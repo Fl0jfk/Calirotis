@@ -14,7 +14,7 @@ type Profile = {
 type Meats = {
   id: number;
   name: string;
-  img: string;
+  image: string;
   halal: boolean;
   description: string;
 };

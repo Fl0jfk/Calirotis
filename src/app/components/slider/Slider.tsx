@@ -5,8 +5,7 @@ import { useData } from "@/app/contexts/data";
 
 function Slider (){
     const data = useData();
-    const slides = data?.slider;
-    console.log(slides)
+    const slides = data.slider;
     return (
         <section className="w-full flex flex-col items-center">
             {slides&& <Carousel data={slides}/>}
