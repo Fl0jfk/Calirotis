@@ -16,7 +16,7 @@ export default function Home() {
       </Head>
       <DataProvider>
         <Header/>
-        <main className="flex flex-col w-full items-center mt-[60px] gap-8"> 
+        <main className="flex flex-col w-full items-center mt-[60px] gap-8 md:mt-[80px]"> 
           <Slider/>
           <Meats/>
           <Banner/>

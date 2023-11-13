@@ -16,7 +16,7 @@ function Carousel ({ data }:CarouselProps){
         <div className="relative flex justify-center items-center w-full max-w-[1000px] h-[600px] sm:h-[500px]">
             {data.map((item, idx) => {
                 return (
-                    <Image src={item.image} alt={item.alt} key={idx} fill className={slide === idx ? "w-full h-full shadow-md xl:rounded-xl lg:rounded-xl" : "w-full h-full shadow-md xl:rounded-xl hidden lg:rounded-xl"} style={{objectFit: "cover", objectPosition:"50% 30%"}} />
+                    <Image src={item.image} alt={item.alt} key={idx} fill className={slide === idx ? "w-full h-full shadow-md xl:rounded-xl lg:rounded-xl sm:object-top xl:object-center" : "w-full h-full shadow-md xl:rounded-xl hidden lg:rounded-xl sm:object-top xl:object-bottom"} style={{objectFit: "cover"}} />
                 );
             })}
             <svg width="50px" height="50px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" onClick={prevSlide} className="absolute left-[1em] cursor-pointer bg-black opacity-50 rounded-full">
