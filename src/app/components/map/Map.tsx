@@ -15,9 +15,13 @@ export default function Map() {
   const data = useData();
   useEffect(() => {
     if (isLoaded && !scriptLoaded) {
+      const link = document.createElement("link");
+      link.rel = "preconnect";
+      link.href = "https://maps.googleapis.com";
+      document.head.appendChild(link);
       const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-      script.async = true;
+      script.async = true; 
       script.onload = () => {
         setScriptLoaded(true);
       };
@@ -30,7 +34,7 @@ export default function Map() {
     <Suspense fallback={<div>Loading...</div>}>
       <GoogleMap zoom={9} center={center} mapContainerClassName="max-w-[800px] w-[50%] h-[450px] rounded-xl mx-auto sm:w-full" options={MAP_OPTIONS}>
         {data.profile.logo && (
-          <Marker position={center} icon={{ url: data.profile.logo, scaledSize: new window.google.maps.Size(80, 80)}}/>
+          <Marker position={center} icon={{ url: data.profile.logo, scaledSize: new window.google.maps.Size(70, 70)}}/>
         )}
       </GoogleMap>
     </Suspense>
