@@ -28,7 +28,7 @@ function Carousel ({ data }:CarouselProps){
             <span className="indicators">
                 {data.map((_, idx) => {
                     return (
-                        <button key={idx} className={slide === idx ? "indicator" : "indicator indicator-inactive"} onClick={() => setSlide(idx)}></button>
+                        <button key={idx} name="boutons de slider" className={slide === idx ? "indicator" : "indicator indicator-inactive"} onClick={() => setSlide(idx)}></button>
                     );
                 })}
             </span>
