@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Page d`&apos;`accueil Calirotis</title>
+        <title>Page d`&apos;`accueil de Calirotis</title>
       </Head>
       <DataProvider>
         <Header/>
