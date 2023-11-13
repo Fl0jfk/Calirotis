@@ -13,7 +13,7 @@ export default function Map() {
       <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string}>
         <GoogleMap zoom={9} center={center} mapContainerClassName="max-w-[800px] w-[50%] h-[450px] rounded-xl mx-auto sm:w-full" options={MAP_OPTIONS}>
           {data.profile.logo && (
-            <Marker position={center} icon={{ url: data.profile.logo, scaledSize: new window.google.maps.Size(70, 70)}}/>
+            <Marker position={center} icon={{ url: data.profile.logo, scaledSize: new window.google.maps.Size(40, 40)}}/>
           )}
         </GoogleMap>
       </LoadScript>

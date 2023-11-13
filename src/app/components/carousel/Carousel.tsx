@@ -1,16 +1,30 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 function Carousel ({ data }:CarouselProps){
     const [slide, setSlide] = useState(0);
+    const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
     const nextSlide = () => {
-        setSlide(slide === data.length - 1 ? 0 : slide + 1);
+        if (intervalId !== null) {
+            clearInterval(intervalId)
+        }
+        setSlide((prevSlide) => (prevSlide === data.length - 1 ? 0 : prevSlide + 1));
     };
     const prevSlide = () => {
-        setSlide(slide === 0 ? data.length - 1 : slide - 1);
+        if (intervalId !== null) {
+            clearInterval(intervalId)
+        }
+        setSlide((prevSlide) => (prevSlide === 0 ? data.length - 1 : prevSlide - 1));
     };
+    useEffect(() => {
+        const id = setInterval(() => {
+            nextSlide();
+        }, 5000);
+        setIntervalId(id);
+        return () => clearInterval(id)
+    }, [slide, data.length]);
     return (
         <div className="relative flex justify-center items-center w-full max-w-[1000px] h-[600px] sm:h-[500px]">
             {data.map((item, idx) => {
@@ -27,7 +41,7 @@ function Carousel ({ data }:CarouselProps){
             <span className="flex absolute bottom-[1rem]">
                 {data.map((_, idx) => {
                     return (
-                        <button key={idx} id={`al${idx}`} name="boutons de slider" aria-label="boutons de slider" className={slide === idx ? "bg-white h-[0.8em] w-[0.8em] rounded-full border-0 outline-none shadow-gray-300 shadow-lg ml-[0.2rem] mr-[0.2rem] cursor-pointer" : "h-[0.8em] w-[0.8em] rounded-full border-0 outline-none shadow-gray-300 shadow-lg ml-[0.2rem] mr-[0.2rem] cursor-pointer bg-gray-500"} onClick={() => setSlide(idx)}></button>
+                        <button key={idx} id={`al${idx}`} name="boutons de slider" aria-label="boutons de slider" className={slide === idx ? "bg-white h-[0.8em] w-[0.8em] rounded-full border-0 outline-none shadow-gray-300 shadow-lg ml-[0.2rem] mr-[0.2rem] cursor-pointer sm:hidden md:hidden" : "h-[0.8em] w-[0.8em] rounded-full border-0 outline-none shadow-gray-300 shadow-lg ml-[0.2rem] mr-[0.2rem] cursor-pointer bg-gray-500 sm:hidden md:hidden"} onClick={() => setSlide(idx)}></button>
                     );
                 })}
             </span>
