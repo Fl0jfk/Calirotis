@@ -1,4 +1,4 @@
-import { useMemo, Suspense } from "react";
+import { useMemo } from "react";
 import { GoogleMap, Marker, LoadScript } from "@react-google-maps/api";
 import { useData } from "../../contexts/data";
 
@@ -10,7 +10,6 @@ export default function Map() {
   const center = useMemo(() => ({ lat: 49.231, lng: 1.222 }), []);
   const data = useData();
   return (
-    <Suspense>
       <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string}>
         <GoogleMap zoom={9} center={center} mapContainerClassName="max-w-[800px] w-[50%] h-[450px] rounded-xl mx-auto sm:w-full" options={MAP_OPTIONS}>
           {data.profile.logo && (
@@ -18,6 +17,5 @@ export default function Map() {
           )}
         </GoogleMap>
       </LoadScript>
-    </Suspense>
   )
 }
