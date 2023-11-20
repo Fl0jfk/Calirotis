@@ -49,16 +49,6 @@
                 "alt": "image des accompagnements"
             },
             {
-                "id": 4,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/presentation.webp",
-                "alt": "image type de présentation sur stand"
-            },
-            {
-                "id": 5,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/accompagnement+2.webp",
-                "alt": "image des accompagnements"
-            },
-            {
                 "id": 6,
                 "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/cochondelait.webp",
                 "alt": "image d'un cochon de lait"
