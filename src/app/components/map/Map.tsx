@@ -14,7 +14,7 @@ export default function Map() {
 
 return (
     <GoogleMap zoom={9} center={center} mapContainerClassName="max-w-[800px] w-[50%] h-[450px] rounded-xl mx-auto sm:w-full" options={{ disableDefaultUI: true }}>
-        {data.profile.logo&&<Marker position={center} icon={{url: data.profile.logo, scaledSize: new window.google.maps.Size(80, 80),}}/>}
+        {data.profile.logo&&<Marker position={center} icon={{url: data.profile.logo, scaledSize: new window.google.maps.Size(60, 60),}}/>}
     </GoogleMap>
   );
  }
