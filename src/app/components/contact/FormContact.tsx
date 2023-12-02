@@ -56,7 +56,7 @@ function FormContact () {
                     ></textarea>
                 </div>
                 <div>
-                    <button className='hover:shadow-form rounded-full border-[1px] border-[#ffffff8f] font-thin py-3 px-8 text-base uppercase  text-white outline-none transition duration-300 ease-in-out hover:bg-white hover:text-black'>
+                    <button className='hover:shadow-form rounded-full border-[1px] border-[#ffffff8f] font-thin py-3 px-8 text-base uppercase text-white outline-none transition duration-300 ease-in-out hover:bg-white hover:text-black'>
                         Envoyer
                     </button>
                 </div>

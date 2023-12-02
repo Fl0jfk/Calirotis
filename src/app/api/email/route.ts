@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 
+
 export async function POST(request: NextRequest) {
   const { email, name, message } = await request.json();
 
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
     const mailOptions: Mail.Options = {
       from: process.env.MY_EMAIL,
       to: process.env.MY_EMAIL,
+      // cc: email, (uncomment this line if you want to send a copy to the sender)
       subject: `Vous avez reçu un mail de ${name} ${email} depuis votre site internet.`,
       text: message,
     };
@@ -23,7 +25,6 @@ export async function POST(request: NextRequest) {
     const sendMailPromise = () =>
       new Promise<string>((resolve, reject) => {
         transport.sendMail(mailOptions, function (err) {
-            console.log(err)
           if (!err) {
             resolve('Email envoyé');
           } else {
