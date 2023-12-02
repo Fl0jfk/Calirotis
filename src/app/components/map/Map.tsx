@@ -1,3 +1,5 @@
+"use client"
+
 import { useMemo } from "react";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 import { useData } from "../../contexts/data";
@@ -8,6 +10,7 @@ export default function Map() {
   });
   if (!isLoaded) return <div>Loading...</div>;
   return <MapKit/>;
+
  function MapKit(){
   const center = useMemo(() => ({ lat: 49.231, lng: 1.222 }), []);
   const data = useData();

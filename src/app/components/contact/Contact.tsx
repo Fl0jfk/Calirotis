@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link";
 import Map from "../map/Map";
 import FormContact from "./FormContact";
