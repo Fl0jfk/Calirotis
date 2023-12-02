@@ -2,7 +2,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, PropsWithChildren } from "react";
 
-
 type Profile = {
   firstname: string;
   lastname: string;
@@ -10,7 +9,6 @@ type Profile = {
   profilePhoto: string;
   logo: string;
 };
-
 
 type Meats = {
   id: number;
@@ -84,11 +82,9 @@ export const DataProvider = ({ children }: PropsWithChildren<{}>) => {
       setError(err instanceof Error ? err : new Error("An error occurred"));
     }
   }, []);
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
   return (
     <DataContext.Provider value={data || initialData}>
       {children}
