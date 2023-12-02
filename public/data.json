@@ -55,11 +55,6 @@
             },
             {
                 "id": 7,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/cohon+de+lait.webp",
-                "alt": "image d'un cochon de lait"
-            },
-            {
-                "id": 8,
                 "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/event.webp",
                 "alt": "image d'un évènement"
             }
