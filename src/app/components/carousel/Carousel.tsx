@@ -1,56 +1,75 @@
-"use client"
-
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { wrap } from "popmotion";
 
-function Carousel ({ data }:CarouselProps){
-    const [slide, setSlide] = useState(0);
-    const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
-    const nextSlide = () => {
-        if (intervalId !== null) {
-            clearInterval(intervalId)
-        }
-        setSlide((prevSlide) => (prevSlide === data.length - 1 ? 0 : prevSlide + 1));
+const variants = {
+    enter: (direction: number) => {
+      return {
+        x: direction > 0 ? 500 : -500,
+        opacity: 0
+      };
+    },
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => {
+      return {
+        zIndex: 0,
+        x: direction < 0 ? 500 : -500,
+        opacity: 0
+      };
+    }
+  };
+  
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+  };
+
+export default function Carousel ({ data }:CarouselProps){
+    const [[page, direction], setPage] = useState([0, 0]);
+    const imageIndex = wrap(0, data.length, page);
+    const paginate = (newDirection: number) => {
+        setPage([page + newDirection, newDirection]);
     };
-    const prevSlide = () => {
-        if (intervalId !== null) {
-            clearInterval(intervalId)
-        }
-        setSlide((prevSlide) => (prevSlide === 0 ? data.length - 1 : prevSlide - 1));
-    };
-    useEffect(() => {
-        const id = setInterval(() => {
-            nextSlide();
-        }, 5000);
-        setIntervalId(id);
-        return () => clearInterval(id)
-    }, [slide, data.length]);
-    return (
-        <div className="relative flex justify-center items-center w-full max-w-[1000px] h-[600px] sm:h-[500px]">
-            {data.map((item, idx) => {
-                return (
-                    <Image src={item.image} alt={item.alt} key={idx} fill className={slide === idx ? "w-full h-full shadow-md xl:rounded-xl lg:rounded-xl sm:object-top xl:object-center" : "w-full h-full shadow-md xl:rounded-xl hidden lg:rounded-xl sm:object-top xl:object-bottom"} style={{objectFit: "cover"}} />
-                );
-            })}
-            <svg width="50px" height="50px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" onClick={prevSlide} className="absolute left-[1em] cursor-pointer bg-black opacity-50 rounded-full">
-                <path d="M5 12H19M5 12L11 6M5 12L11 18" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <svg width="50px" height="50px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" onClick={nextSlide} className="absolute right-[1em] cursor-pointer bg-black opacity-50 rounded-full">
-                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="flex absolute bottom-[1rem]">
-                {data.map((_, idx) => {
-                    return (
-                        <button key={idx} id={`al${idx}`} name="boutons de slider" aria-label="boutons de slider" className={slide === idx ? "bg-white h-[0.8em] w-[0.8em] rounded-full border-0 outline-none shadow-gray-300 shadow-lg ml-[0.2rem] mr-[0.2rem] cursor-pointer sm:hidden md:hidden" : "h-[0.8em] w-[0.8em] rounded-full border-0 outline-none shadow-gray-300 shadow-lg ml-[0.2rem] mr-[0.2rem] cursor-pointer bg-gray-500 sm:hidden md:hidden"} onClick={() => setSlide(idx)}></button>
-                    );
-                })}
-            </span>
-        </div>
-    );
+    const autoScroll = () => {
+        paginate(1);
+      };
+      useEffect(() => {
+        const interval = setInterval(autoScroll, 5000);
+        return () => clearInterval(interval);
+      }, [page]); 
+  return (
+    <section className="w-screen h-[45vh] md:h-[35vh] sm:h-[35vh] flex justify-center items-center z-[0] max-w-[1050px] mx-auto mt-10">
+      <div className="w-screen h-[45vh] md:h-[35vh] sm:h-[35vh] relative flex items-center justify-center z-[0] xl:rounded-xl">
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.img key={page} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
+            src={data[imageIndex].image} 
+            className="absolute max-w-screen h-full w-full object-cover z-[0] xl:rounded-xl"
+            transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 }}}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x);
+              if (swipe < -swipeConfidenceThreshold) { paginate(1)}
+               else if (swipe > swipeConfidenceThreshold) { paginate(-1)}
+            }}
+          />
+        </AnimatePresence>
+        <button className="select-none pt-1 absolute text-black bg-white rounded-full opacity-70 w-[40px] h-[40px] flex justify-center items-center text-3xl z-[1] right-4 top-[calc(50%-20px)] md:hidden sm:hidden" onClick={() => paginate(1)}>
+          {"‣"}
+        </button>
+        <button className="scale-[-1] pt-1 select-none text-black absolute bg-white rounded-full opacity-70 w-[40px] h-[40px] flex justify-center items-center text-3xl z-[1] left-4 top-[calc(50%-20px)] md:hidden sm:hidden" onClick={() => paginate(-1)}>
+          {"‣"}
+        </button>
+      </div>
+    </section>
+  );
 };
 
 type CarouselProps = {
     data: Array<{ id:number; image: string; alt: string }>;
 };
-
-export default Carousel;

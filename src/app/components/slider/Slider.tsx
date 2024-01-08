@@ -7,7 +7,7 @@ function Slider (){
     const data = useData();
     const slides = data.slider;
     return (
-        <section className="w-full flex flex-col items-center">
+        <section className="w-full flex items-center">
             {slides&& <Carousel data={slides}/>}
         </section>
     )
