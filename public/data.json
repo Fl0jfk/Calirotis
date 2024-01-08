@@ -13,21 +13,21 @@
                 "id": 1,
                 "name": "Cochon de lait à la broche",
                 "halal": false,
-                "description": "Découvrez notre cochon de lait entier cuit à la broche. Sa peau croustillante est dorée à souhait, sa chair est tendre et juteuse. Cuit au feu de bois avec sa marinade composée d'huile d'olive, de poivrons, de tomates, d'oignons, d'ail, de sel et de poivre.",
+                "description": "Découvrez le cochon de lait entier cuit à la broche. Sa peau croustillante dorée à souhait et sa chair aussi juteuse que tendre saura vous ravir. Cuit au feu de bois avec sa marinade.",
                 "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/cochon-grill195169-1.webp"
             },
             {
                 "id": 2,
                 "name": "Agneau à la broche",
                 "halal": true,
-                "description": "Succombez aux arômes envoûtants de notre agneau cuit à la broche. Sa peau croustillante et dorée cache une chair d'une extrême délicatesse, fondante dans la bouche à chaque bouchée. Cuit au feu de bois avec sa marinade composée d'huile d'olive, de poivrons, de tomates, d'oignons, d'ail, de sel et de poivre.",
+                "description": "Succombez aux arômes inimitables de notre agneau cuit à la broche. Sous sa peau croustillante et dorée vous trouverez une viande d'une extrême délicatesse et fondante à chaque bouchée. Cuit au feu de bois avec sa marinade.",
                 "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/agneau-grill195169-1.webp"
             },
             {
                 "id": 3,
                 "name": "Barbecue",
                 "halal": false,
-                "description": "Nos barbecues géants n'ont pour seule limite votre imagination. Saucisses, merguez, brochettes, cuisses de poulet, viande rouge, etc... Nous répondons à tous vos désirs !",
+                "description": "Notre barbecue géant n'a de limite que votre imagination ! Que vous préfériez saucisses, merguez, brochettes, viandes blanches ou rouge nous saurons cuire ou griller le moindre de vos désirs ! À vous de jouer.",
                 "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/barbecue.webp"
             }
         ],
