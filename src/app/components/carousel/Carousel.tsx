@@ -41,6 +41,9 @@ export default function Carousel ({ data }:CarouselProps){
         const interval = setInterval(autoScroll, 5000);
         return () => clearInterval(interval);
       }, [page]); 
+      if (data.length === 0) {
+        return <div>No data available for the carousel</div>;
+    }
   return (
     <section className="w-screen h-[45vh] md:h-[35vh] sm:h-[35vh] flex justify-center items-center z-[0] max-w-[1050px] mx-auto mt-10">
       <div className="w-screen h-[45vh] md:h-[35vh] sm:h-[35vh] relative flex items-center justify-center z-[0] xl:rounded-xl">
