@@ -45,8 +45,8 @@ export default function Carousel ({ data }:CarouselProps){
         return <div>No data available for the carousel</div>;
     }
   return (
-    <section className="w-screen h-[45vh] md:h-[35vh] sm:h-[35vh] flex justify-center items-center z-[0] max-w-[1050px] mx-auto mt-10">
-      <div className="w-screen h-[45vh] md:h-[35vh] sm:h-[35vh] relative flex items-center justify-center z-[0] xl:rounded-xl">
+    <section className="w-screen h-[45vh] flex justify-center items-center z-[0] max-w-[1050px] mx-auto mt-10">
+      <div className="w-screen h-[45vh] relative flex items-center justify-center z-[0] xl:rounded-xl">
         <AnimatePresence initial={false} custom={direction}>
           <motion.img key={page} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
             src={data[imageIndex].image} 

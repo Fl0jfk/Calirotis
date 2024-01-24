@@ -92,7 +92,7 @@ export const DataProvider = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export const useData = () => {
+export const useData = () : Data => {
   const context = useContext(DataContext);
   if (!context) {
     throw new Error("useData must be used within a DataProvider");
