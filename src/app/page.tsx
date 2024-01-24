@@ -13,7 +13,6 @@ export default function Home() {
     <>
       <Head>
         <title>Page d`&apos;`accueil de Calirotis</title>
-        <meta name="google-site-verification" content="6Z0b5nwln-gOrQkGTIQtXxHo1bdASiGnvCi1pnpu6oA" />
       </Head>
       <DataProvider>
         <Header/>
