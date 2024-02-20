@@ -38,7 +38,7 @@ function Header(){
                         <Image src={data.profile.logo} alt='Logo de calirotis' width={50} height={50} className='cursor-pointer z-[8] mb-[5px]' onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>
                     }
                 </div>
-                <h1 className='text-center w-full text-xl sm:block hidden'>Calirôtis</h1>
+                <h1 className='text-center w-full text-xl sm:block hidden'>Calirotis</h1>
                 <div className='w-10/12 sm:w-2/12 flex justify-end items-center sm:mt-[-5px]'>
                     <Navbar menuOpened={menuOpened} onLinkClick={handleLinkClick}/>
                     <div className='flex justify-end w-[40] h-[100px] md:h-[50px] sm:h-[30px] items-center' onClick={() => handleClick()}>
