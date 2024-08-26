@@ -2,6 +2,7 @@
 
 const nextConfig = {
     images: {
+        formats : ['image/webp'],
         domains: ['calirotis.s3.eu-west-3.amazonaws.com'],
     },
 }

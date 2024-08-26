@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 function About (){
     return (
         <section className="w-full flex flex-col p-6 items-center gap-8" id="about">

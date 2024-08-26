@@ -16,7 +16,7 @@ export default function Map() {
   const data = useData();
 
 return (
-    <GoogleMap zoom={9} center={center} mapContainerClassName="max-w-[800px] w-[50%] h-[450px] rounded-xl mx-auto sm:w-full" options={{ disableDefaultUI: true }}>
+    <GoogleMap zoom={9} center={center} mapContainerClassName="w-1/2 sm:w-full h-[930px] rounded-xl sm:h-[400px]" options={{ disableDefaultUI: true }}>
         {data.profile.logo&&<Marker position={center} icon={{url: data.profile.logo, scaledSize: new window.google.maps.Size(60, 60),}}/>}
     </GoogleMap>
   );

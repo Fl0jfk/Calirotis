@@ -4,7 +4,7 @@ import FormContact from "./FormContact";
 
 function Contact (){
     return (
-        <section id="contact" className="p-4 flex flex-col items-center w-full max-w-[1000px]">
+        <section id="contact" className="p-4 flex flex-col items-center w-full max-w-[1000px] gap-8 justify-center">
             <h2 className='text-7xl mb-10 text-center'>Contact</h2>
             <div className="flex items-center w-full justify-center">
                 <p>Vous pouvez nous joindre directement par 
@@ -15,13 +15,11 @@ function Contact (){
                     </Link> ou en remplissant le formulaire. Nous vous répondrons le plus rapidement possible.
                 </p>
             </div>
-            <div className="flex flex-col gap-4 p-8 w-full max-w-[1000px]">
-                <div className="flex gap-10 sm:flex-col sm:items-center">
+                <div className="flex gap-8 sm:flex-col items-center w-full">
                     <FormContact/>
                     <Map/>
-                </div>
-            </div> 
-            <div className="flex items-center w-full justify-center max-w-[1000px]">
+                </div> 
+            <div className="flex items-center w-full justify-center">
                 <p>Nous sommes situés sur la commune de Saint-Pierre du Vauvray en Normandie, nous pouvons nous déplacer chez vous pour tous types d&apos;évènements en Normandie et en Ile-de-France </p>
             </div> 
         </section>

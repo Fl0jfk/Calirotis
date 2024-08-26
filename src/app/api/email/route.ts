@@ -4,7 +4,7 @@ import Mail from 'nodemailer/lib/mailer';
 
 
 export async function POST(request: NextRequest) {
-  const { email, name, message } = await request.json();
+  const { email, name, message, telephone, numberInv, date, dateAMPM, location } = await request.json();
 
   const transport = nodemailer.createTransport({
     service: 'gmail',
@@ -17,9 +17,16 @@ export async function POST(request: NextRequest) {
     const mailOptions: Mail.Options = {
       from: process.env.NEXT_PUBLIC_MY_EMAIL,
       to: process.env.NEXT_PUBLIC_MY_EMAIL,
-      // cc: email, (uncomment this line if you want to send a copy to the sender)
-      subject: `Vous avez reçu un mail de ${name} ${email} depuis votre site internet.`,
-      text: message,
+      subject: `Vous avez reçu un nouveau message depuis votre site internet.`,
+      text: ` 
+              ${name},
+              ${email},
+              ${telephone},
+              Nombre d'invités souhaités : ${numberInv},
+              Date de l'évènement : ${date},
+              Midi ou soir ? : ${dateAMPM},
+              Lieu de l'évènement : ${location},
+              ci-après son message : ${message}.`
     };
   
     const sendMailPromise = () =>
