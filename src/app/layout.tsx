@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 export default function RootLayout({children}:{children: React.ReactNode}){
   return (
     <html lang="fr">
-      <body className={`${roboto.className} text-white antialiased`}>
+      <body className={`${roboto.className} bg-black text-white antialiased`}>
         <DataProvider>
           <Provider store={store}>
             <Header/>
