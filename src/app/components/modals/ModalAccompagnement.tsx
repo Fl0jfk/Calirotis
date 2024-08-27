@@ -52,6 +52,7 @@ export default function ModalAccompagnement() {
                     );
                 })}
             </div>
+            <p>Toutes nos viandes sont d'origines françaises ou européenes, sur demande certaines peuvent être halal.</p>
         </section>
     )
 }
