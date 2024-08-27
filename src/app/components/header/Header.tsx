@@ -6,17 +6,19 @@ import Image from 'next/image';
 import { useData } from '../../contexts/data';
 import CrossButton from '../buttons/CrossButton';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';	
+import Link from 'next/link';
 
-function Header(){
-    const data = useData();
+export default function Header(){
+    const data = useData()
     const { scrollY } = useScroll();
     const [menuOpened, setMenuOpened] = useState(false);
     const [hidden, setHidden ] = useState(false);
-    const opacityMenu = (!menuOpened? "sm:opacity-80 md:opacity-80" : "")
+    const opacityMenu = (!menuOpened? "sm:opacity-80 md:opacity-80 h-[10vh] ease-linear duration-300" : "h-[100vh] ease-linear duration-300");
+    const opacityLogo = (!menuOpened? "ease-linear delay-100 duration-200 scale-1" : "ease-linear delay-150 duration-300 scale-0");
     const handleClick = () => {
         setMenuOpened(!menuOpened);
     };
-   useMotionValueEvent(scrollY, "change", (latest) => {
+   useMotionValueEvent(scrollY, "change", (latest:any) => {
     const previous = scrollY.getPrevious();
     if(latest > previous && latest > 150 ){
         setHidden(true);
@@ -32,16 +34,17 @@ function Header(){
             variants={{ visible: { y: 0 }, hidden: { y: "-100%" }}} 
             animate={hidden ? "hidden" : "visible"}
             transition={{duration: 0.35, ease: "easeInOut"}}
-            className={`flex p-4 justify-between w-full md:fixed sm:fixed z-[12] md:mb-[100px] md:bg-[#000000] sm:bg-[#000000] max-w-[1000px] ${opacityMenu}`}>
-                <div className='sm:w-2/12 h-[100px] md:h-[40px] sm:h-[20px] flex items-center'>
-                    {data.profile.logo && 
-                        <Image src={data.profile.logo} alt='Logo de calirotis' width={50} height={50} className='cursor-pointer z-[8] mb-[5px]' onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>
+            className={`flex p-4 justify-between items-center w-full sm:fixed md:fixed z-[12] md:mb-[100px] bg-[#000] max-w-[1500px] mx-auto ${opacityMenu} self-center text-2xl overflow-hidden`}>
+                <div className='flex items-center h-full sm:w-4/12 md:w-4/12'>
+                    {data.profile.logo &&
+                        <Link href="/">
+                            <Image src={data.profile.logo} alt='Mon memoji' width={70} height={70} className={`cursor-pointer z-[8] ${opacityLogo}`} onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>
+                        </Link>
                     }
                 </div>
-                <h1 className='text-center w-full text-xl sm:block hidden'>Calirotis</h1>
-                <div className='w-10/12 sm:w-2/12 flex justify-end items-center sm:mt-[-5px]'>
+                <div className='flex justify-end items-center sm:mt-[-5px] h-full'>
                     <Navbar menuOpened={menuOpened} onLinkClick={handleLinkClick}/>
-                    <div className='flex justify-end w-[40] h-[100px] md:h-[50px] sm:h-[30px] items-center' onClick={() => handleClick()}>
+                    <div className='flex justify-end w-[40] items-center h-full' onClick={() => handleClick()}>
                         <CrossButton menuOpened={menuOpened}/>
                     </div>
                 </div>
@@ -53,5 +56,3 @@ type handleLinkClickProps = {
     clickOnLink : boolean;
     onLinkClick: (clickOnLink: boolean) => void;
 }
-
-export default Header;

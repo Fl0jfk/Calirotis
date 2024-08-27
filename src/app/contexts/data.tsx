@@ -1,51 +1,56 @@
-"use client"
-
 import { createContext, useCallback, useContext, useEffect, useState, PropsWithChildren } from "react";
 
 type Profile = {
   firstname: string;
   lastname: string;
   profession: string;
-  profilePhoto: string;
   logo: string;
 };
 
-type Meats = {
+type Categories = {
   id: number;
   name: string;
-  image: string;
-  halal: boolean;
+  img: string;
+  shortDescription: string;
   description: string;
 };
 
-type Slider = {
+type ImageCochon ={
+  id: number;
+  link:string;
+}
+
+type ImageAgneau ={
+  id: number;
+  link:string;
+}
+
+type ImageBarbecue ={
+  id: number;
+  link:string;
+}
+
+type ImageAccompagnement ={
+  id: number;
+  link:string;
+}
+
+type Reviews = {
   id:number;
-  image: string;
-  alt:string;
-};
-
-type Testimonial = {
-  id: number;
-  author: string;
-  job: string;
-  photoAuthor: string;
-  testimonial: string;
-  website: string;
-  linkedin: string;
-};
-
-type Other = {
-  id: number;
-  name: string;
-  src: string;
+  imageUser:string;
+  nameUser:string;
+  rating:number;
+  message:string;
 }
 
 type Data = {
   profile: Profile;
-  meats: Meats[];
-  slider: Slider[];
-  testimonials: Testimonial[];
-  others: Other[];
+  categories: Categories[];
+  imageCochon: ImageCochon[];
+  imageAgneau: ImageAgneau[];
+  imageBarbecue: ImageBarbecue[];
+  imageAccompagnement: ImageAccompagnement[];
+  reviews: Reviews[];
   error: Error | null;
 };
 
@@ -54,13 +59,14 @@ const initialData: Data = {
     firstname: "",
     lastname: "",
     profession: "",
-    profilePhoto: "",
-    logo:""
+    logo: "",
   },
-  meats: [],
-  slider: [],
-  testimonials: [],
-  others: [],
+  categories: [],
+  imageCochon: [],
+  imageAgneau:[],
+  imageBarbecue:[],
+  imageAccompagnement:[],
+  reviews:[],
   error: null
 };
 
@@ -72,7 +78,7 @@ export const DataProvider = ({ children }: PropsWithChildren<{}>) => {
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await fetch("/data.json");
+      const response = await fetch("https://calirotisassets.s3.eu-west-3.amazonaws.com/data.json");
       if (!response.ok) {
         throw new Error("Failed to fetch data");
       }
@@ -82,9 +88,11 @@ export const DataProvider = ({ children }: PropsWithChildren<{}>) => {
       setError(err instanceof Error ? err : new Error("An error occurred"));
     }
   }, []);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
   return (
     <DataContext.Provider value={data || initialData}>
       {children}
@@ -92,11 +100,10 @@ export const DataProvider = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export const useData = () : Data => {
+export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {
     throw new Error("useData must be used within a DataProvider");
   }
   return context;
 };
-

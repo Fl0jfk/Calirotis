@@ -4,59 +4,178 @@
             "firstname" : "Martin",
             "lastname": "Caliço",
             "profession": "Traiteur",
-            "profilePhoto" : "",
-            "logo" : "https://calirotis.s3.eu-west-3.amazonaws.com/assets/logo/Logo+Calirotis.png"
+            "logo" : "https://calirotisassets.s3.eu-west-3.amazonaws.com/logos/Logo+Calirotis.png"
         },
-    "meats": 
-        [
-            {
-                "id": 1,
-                "name": "Cochon de lait à la broche",
-                "halal": false,
-                "description": "Découvrez le cochon de lait entier cuit à la broche. Sa peau croustillante dorée à souhait et sa chair aussi juteuse que tendre saura vous ravir. Cuit au feu de bois avec sa marinade.",
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/cochon-grill195169-1.webp"
-            },
-            {
-                "id": 2,
-                "name": "Agneau à la broche",
-                "halal": true,
-                "description": "Succombez aux arômes inimitables de notre agneau cuit à la broche. Sous sa peau croustillante et dorée vous trouverez une viande d'une extrême délicatesse et fondante à chaque bouchée. Cuit au feu de bois avec sa marinade.",
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/agneau-grill195169-1.webp"
-            },
-            {
-                "id": 3,
-                "name": "Barbecue",
-                "halal": false,
-                "description": "Notre barbecue géant n'a de limite que votre imagination ! Que vous préfériez saucisses, merguez, brochettes, viandes blanches ou rouge nous saurons cuire ou griller le moindre de vos désirs ! À vous de jouer.",
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/barbecue.webp"
-            }
-        ],
-    "slider": 
-        [
-            {
-                "id": 1,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/cochon-grill195169-1.webp",
-                "alt": "image d'un cochon grillé"
-            },
-            {
-                "id": 2,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/agneau-grill195169-1.webp",
-                "alt": "image d'un agneau sur broche"
-            },
-            {
-                "id": 3,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/accompagnement.webp",
-                "alt": "image des accompagnements"
-            },
-            {
-                "id": 6,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/cochondelait.webp",
-                "alt": "image d'un cochon de lait"
-            },
-            {
-                "id": 7,
-                "image": "https://calirotis.s3.eu-west-3.amazonaws.com/assets/img/event.webp",
-                "alt": "image d'un évènement"
-            }
-        ]
+    "categories": [
+        {
+            "id":1,
+            "name": "Cochon de lait à la broche",
+            "img": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photoscochons/cochondelait.webp",
+            "shortDescription": "Découvrez le cochon de lait entier cuit à la broche.",
+            "description": "Découvrez le cochon de lait entier cuit à la broche. Sa peau croustillante dorée à souhait et sa chair aussi juteuse que tendre saura vous ravir. Cuit au feu de bois avec sa marinade."
+        },
+        {
+            "id":2,
+            "name": "Agneau à la broche",
+            "img": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photosagneau/agneau-grill195169-1.webp",
+            "shortDescription": "Succombez aux arômes inimitables de notre agneau cuit à la broche.",
+            "description": "Succombez aux arômes inimitables de notre agneau cuit à la broche. Sous sa peau croustillante et dorée vous trouverez une viande d'une extrême délicatesse et fondante à chaque bouchée. Cuit au feu de bois avec sa marinade."
+        },
+        {
+            "id":3,
+            "name": "Barbecue",
+            "img": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photosbarbecue/barbecue.webp",
+            "shortDescription": "Notre barbecue géant n'a de limite que votre imagination !",
+            "description": "Notre barbecue géant n'a de limite que votre imagination ! Que vous préfériez saucisses, merguez, brochettes, viandes blanches ou rouge nous saurons cuire ou griller le moindre de vos désirs ! À vous de jouer."
+        },
+        {
+            "id":4,
+            "name": "Accompagnement",
+            "img": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photosaccompagnement/accompagnement.webp",
+            "shortDescription": "Profitez en accompagnement des pommes de terre mitrailles à la provençale...",
+            "description": "Profitez en accompagnement des pommes de terre mitrailles à la provençale, cuites dans la graisse de canard ou l'huile d'olive (au choix), avec des oignons, des poivrons, des tomates, de l'ail, des herbes de Provence, du sel et du poivre."
+        }
+    ],
+    "imageCochon":[
+        {
+            "id":1, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photoscochons/cochon-grill195169-1.webp"
+        },
+        {
+            "id":2, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photoscochons/cochondelait.webp"
+        },
+        {
+            "id":3, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photoscochons/cohon+de+lait.webp"
+        },
+        {
+            "id":4, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photoscochons/IMG_2300.jpeg"
+        },
+        {
+            "id":5, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photoscochons/IMG_2301.jpeg"
+        },
+        {
+            "id":6, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photoscochons/IMG_2308.jpeg"
+        }
+
+    ],
+    "imageAgneau":[
+        {
+            "id":101, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photosagneau/agneau-grill195169-1.webp"
+        }
+    ],
+    "imageBarbecue":[
+        {
+            "id":201, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photosbarbecue/barbecue.webp"
+        }
+    ],
+    "imageAccompagnement":[
+        {
+            "id":301, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photosaccompagnement/accompagnement.webp"
+        },
+        {
+            "id":302, 
+            "link": "https://calirotisassets.s3.eu-west-3.amazonaws.com/photosaccompagnement/accompagnement+2.webp"
+        }
+    ],
+    "reviews":[
+        {
+            "id":1,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocI8wmEZL72V86YdO950ZSckKZG0s1QiOC3Unah1foDogqgR10i4=s64-c-rp-mo-br100",
+            "nameUser":"Florian Hacqueville-Mathi",
+            "rating":5,
+            "message":"Prestataire sérieux, très discret et professionnel, qui a su s'adapter à l'environnement. Nous avons très bien mangé, le cochon de lait était incroyable. Nous ne manquerons pas de vous contacter pour les prochaines occasions."
+        },
+        {
+            "id":2,
+            "imageUser":"https://lh3.googleusercontent.com/a-/ALV-UjWhzMKtI6fhXAjLLV7-KvQVqlIYLH_36rWrOFv4mZqTDG5QUdk=s64-c-rp-mo-br100",
+            "nameUser":"Cmoumoune Cmoumoune",
+            "rating":5,
+            "message":"Je tenais à vous exprimer toute ma gratitude pour votre prestation que vous avez préparé. C'était un véritable régal pour les papilles et tous nos invités ont été enchantés par la qualite de votre cuisine. Votre professionnalisme et votre gentillesse ont largement contribué au succès de notre événement. Merci encore pour cette prestation exceptionnelle."
+        },
+        {
+            "id":3,
+            "imageUser":"https://lh3.googleusercontent.com/a-/ALV-UjUv2XUdWtYpUHVqzzUJ_J01Mg9oYYW0HUEMY7AY9Zm4YNaNo17m=w120-h120-p-rp-mo-br100",
+            "nameUser":"Perrine Hacqueville-Mathi",
+            "rating":5,
+            "message":"Prestation excellente ! Toujours aimable et serviable, Martin saura convenir à vos attentes lors de divers événements/cérémonies. Je recommande !"
+        },
+        {
+            "id":4,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocLnR6aT1q2Ob776pJgE55hevxiFutluwP-MwhZLw6uI6QQuRQ=w120-h120-p-rp-mo-br100",
+            "nameUser":"Mathilde Depardé",
+            "rating":5,
+            "message":"J’ai contacté ce traiteur pour des cochons de lait et pomme de terre, un vrai régal !! Le serveur Martin est au top. Un conseil si vous hésitez, n’hésitez plus !!"
+        },
+        {
+            "id":5,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocKcuJExMnB7Eh5BXG2d5Vo0Ctyy35LLCIFvO3Ft0pZh71vH48M=w72-h72-p-rp-mo-ba3-br100",
+            "nameUser":"Axel Barville",
+            "rating":5,
+            "message":"Présent le dimanche pour la fête de Muids et franchement top. Le cochon et l’accompagnement était excellent ! Un personnel très serviable et agréable."
+        },
+        {
+            "id":6,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocIsUeIDD7fqt0Ai1ZoI6v7pP1ZxQMPO6QR7V3T-INQI56UhRNU=w120-h120-p-rp-mo-br100",
+            "nameUser":"Natacha Kaczmarczyk",
+            "rating":5,
+            "message":"Super prestation. Nous avons fait appel à Calirotis pour le mariage de ma soeur. Tout était parfait ! Martin est vraiment très professionnel. Les assiettes étaient très copieuses et les convives, ravis ! Merci Martin"
+        },
+        {
+            "id":7,
+            "imageUser":"https://lh3.googleusercontent.com/a-/ALV-UjUJseoRPb1HiSHr3mWyMxFdX-wtX4wbhF7afuonuEYsP3P-Cn-0=w120-h120-p-rp-mo-br100",
+            "nameUser":"Astrid FAVREL",
+            "rating":5,
+            "message":"Tous nos remerciements au chef Martin, nos convives et nous mêmes garderont un excellent souvenir ! Amabilité, ponctualité, réactivité, Calirôtis nous a régalé, cochon de lait au top et légumes frais. Encore toutes nos félicitations au chef Martin, et merci encore. Bonne continuation ! Astrid"
+        },
+        {
+            "id":8,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocIcYXAHS5ydFd7E9ao3MNFfRhaMFqJr1co2USF_5U6dn94W=w120-h120-p-rp-mo-ba2-br100",
+            "nameUser":"Stephanie Hacqueville",
+            "rating":5,
+            "message":"presta nickel pour un coucous rien à redire que du plus"
+        },
+        {
+            "id":9,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocKvyIh3BRLDbFYwtbWVD5lnZdic58jvwkRePSc-iJyrkMSH6qw=w120-h120-p-rp-mo-br100",
+            "nameUser":"Raphael Vauloup",
+            "rating":5,
+            "message":"Très bonne expérience, une viande de qualité et un personnel très serviable. Je recommande !"
+        },
+        {
+            "id":10,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocJneXdimVv3z19SmSXg4ie6eS3Kl-XJG5B-DySak61IUKjt7A=w120-h120-p-rp-mo-br100",
+            "nameUser":"Nathan Kaczmarczyk",
+            "rating":5,
+            "message":"Nous avons fait appel à Calirotis pour notre mariage et nous n’avons pas été déçu ! Encore merci"
+        },
+        {
+            "id":11,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocITl1u5WFFarY3dsYxFTNBL1bKtuV5ZX-n3Yhmw-TR_A1FHWA=w120-h120-p-rp-mo-br100",
+            "nameUser":"Nathan Pare",
+            "rating":5,
+            "message":"Au top 👌"
+        },
+        {
+            "id":12,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocIJiaXtdrVQQWXmE8EgDmkDtviPERGuARy2aLC4JBJ-Xu06kQ=w120-h120-p-rp-mo-br100",
+            "nameUser":"Allan Morin",
+            "rating":5,
+            "message":"Le top du top ! Prestations et mets de qualité, le sourire en plus, n’hésitez pas !"
+        },
+        {
+            "id":13,
+            "imageUser":"https://lh3.googleusercontent.com/a/ACg8ocI6fGoeo7DH07khAl0MNWzNQ1GXoBFrUimp9TWVUId4ODEKpg=w120-h120-p-rp-mo-br100",
+            "nameUser":"Mickael Lages",
+            "rating":5,
+            "message":"Prestation de qualité! Que des compliments de la part, de nos invités."
+        }
+    ]
 }

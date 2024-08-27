@@ -1,6 +1,6 @@
-function About (){
+export default function About (){
     return (
-        <section className="w-full flex flex-col p-6 items-center gap-8" id="about">
+        <main className="w-full flex flex-col p-6 items-center gap-8 sm:pt-[10vh] md:pt-[10vh]">
             <h2 className="text-6xl">À propos</h2>
             <div className="flex-col w-full flex items-center rounded-xl h-full max-w-[1000px]">
                 <div className="w-full h-full p-8 flex flex-col items-center text-xl bg-gray-700 rounded-xl">
@@ -10,9 +10,6 @@ function About (){
                     <p className="text-start w-full">Je mets à votre service mon professionnalisme et ma passion pour vous permettre de profiter sans vous souciez de votre repas.</p>
                 </div>
             </div>
-        </section>
+        </main>
     )
 }
-
-export default About;
-

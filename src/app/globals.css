@@ -7,6 +7,88 @@ body {
     background: linear-gradient(to bottom, #000000, #d74534);
 }
 
+a {
+    cursor: pointer;
+}
+
+button {
+    cursor: pointer;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
 ::-webkit-scrollbar {
     display: none;
+}
+
+.loader {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #fff;
+    width: 24px;
+    height: 24px;
+    -webkit-animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
+  }
+  
+  @-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .mapboxgl-control-container {
+    @apply hidden;
+}
+
+div[mapboxgl-children] {
+    @apply absolute inset-0;
+}
+
+.prose .anchor {
+    @apply invisible absolute -ml-6 w-full pr-2 no-underline;
+}
+
+.anchor:hover {
+    @apply visible;
+}
+
+.prose .anchor:after {
+    @apply text-neutral-300 content-['#'] dark:text-neutral-700;
+}
+
+.prose *:hover > .anchor {
+    @apply visible;
+}
+
+.react-grid-layout {
+    transition: height 200ms ease;
+}
+
+.react-grid-item {
+    transition: all 500ms ease 0s;
+    transition-property: left, top, width, height;
+}
+
+.react-grid-item img {
+    pointer-events: none;
+    user-select: none;
+}
+
+.react-grid-item.resizing {
+    transition: none;
+    z-index: 1;
+    will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+    transition: none;
+    z-index: 3;
+    will-change: transform;
 }

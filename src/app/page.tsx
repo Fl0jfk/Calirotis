@@ -1,12 +1,8 @@
 import Head from 'next/head';
-import Header from './components/header/Header';
-import { DataProvider } from './contexts/data';
-import Footer from './components/footer/Footer';
-import Contact from './components/contact/Contact';
-import Slider from './components/slider/Slider';
 import Banner from './components/banner/Banner';
-import Meats from './components/meats/Meats';
-import About from './components/about/About';
+import Testimonials from './components/testimonials/Testimonials';
+import RollingSlider from './components/slider/RollingSlider';
+import Modal from './components/modals/Modal';
 
 export default function Home() {
   return (
@@ -14,17 +10,12 @@ export default function Home() {
       <Head>
         <title>Page d`&apos;`accueil de Calirotis</title>
       </Head>
-      <DataProvider>
-        <Header/>
-        <main className="flex flex-col w-full items-center mt-[30px] md:mt-[50px] gap-8"> 
-          <Slider/>
-          <Meats/>
+        <main className="flex flex-col h-full w-full items-center sm:pt-[10vh] md:pt-[10vh] z-0"> 
+          <RollingSlider/>
           <Banner/>
-          <About/>
-          <Contact/>
+          <Testimonials/>
+          <Modal/>
         </main>
-        <Footer/> 
-      </DataProvider>  
     </> 
   )
 }
