@@ -42,6 +42,7 @@ export default function Header(){
                         </Link>
                     }
                 </div>
+                <p className='w-4/12 uppercase mr-[50px] lg:mr-0 xl:mr-0 lg:ml-[250px] xl:ml-[250px]'>Calirotis</p>
                 <div className='flex justify-end items-center sm:mt-[-5px] h-full'>
                     <Navbar menuOpened={menuOpened} onLinkClick={handleLinkClick}/>
                     <div className='flex justify-end w-[40] items-center h-full' onClick={() => handleClick()}>
