@@ -41,23 +41,28 @@ export default function News() {
     );
   }
   return (
-    <section className="p-8 flex flex-col items-center gap-8 text-white">
+    <section className="p-8 flex flex-col items-center justify-center gap-8 text-white sm:p-4">
       <h2 className="text-6xl">On parle de nous !</h2>
       {sortedNews ? (
-        <div>
-          <Image
-            src={sortedNews.miniature}
-            alt={sortedNews.name}
-            width={100}
-            height={100}
-            style={{ width: "100px", height: "auto" }}
-          />
-          <h3>{sortedNews.name}</h3>
-          <p>{sortedNews.message}</p>
-          <Link href={sortedNews.link} target="_blank" rel="noopener noreferrer">
+        <div className="flex items-center justify-center p-4 bg-gray-600 rounded-lg shadow-md h-full gap-4">
+          <div className="flex flex-col justify-center gap-4">
+            <p>{sortedNews.daily}</p>
+            <Image
+              src={sortedNews.miniature}
+              alt={sortedNews.name}
+              width={200}
+              height={200}
+              style={{ width: "500px", height: "auto" }}
+              className="rounded-md"
+            />
+          </div>
+          <div className="flex flex-col justify-between gap-6 mt-8 sm:gap-2">
+            <h3 className="text-2xl">{sortedNews.name}</h3>
+            <p>{sortedNews.message}</p>
+            <Link href={sortedNews.link} target="_blank" rel="noopener noreferrer" className="underline">
             Lire l'article
-          </Link>
-          <p>Date: {new Date(sortedNews.date.split("/").reverse().join("-")).toLocaleDateString()}</p>
+            </Link>
+          </div>
         </div>
       ) : (
         <p>Aucune actualité disponible pour le moment.</p>
