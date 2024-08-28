@@ -38,7 +38,7 @@ export default function Header(){
                 <div className='flex items-center h-full sm:w-4/12 md:w-4/12'>
                     {data.profile.logo &&
                         <Link href="/">
-                            <Image src={data.profile.logo} alt='Mon memoji' width={60} height={60} className={`cursor-pointer z-[8] ${opacityLogo}`} onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>
+                            <Image src={data.profile.logo} alt='Mon memoji' width={55} height={55} className={`cursor-pointer z-[8] ${opacityLogo}`} onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>
                         </Link>
                     }
                 </div>

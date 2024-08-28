@@ -8,7 +8,7 @@ function Footer(){
         <footer className="p-4 flex flex-col max-w-[1500px] mx-auto gap-4">
             <Chat/>
             <Link href={"/contact"} className="self-center transition ease-in-out duration-100 rounded-full text-2xl hover:scale-105 text-white p-4">Contactez-moi</Link>
-            <div className="flex w-1/5 mx-auto justify-between sm:w-3/5">
+            <div className="flex w-1/5 mx-auto justify-between sm:w-2/5">
                 <Link href="https://www.instagram.com/explore/locations/178720915323535/calirotis-traiteur/" className="hover:scale-[1.1] transition ease-in-out duration-100" target="blank">
                     <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none">
                         <path fillRule="evenodd" clipRule="evenodd" d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" fill="#FFF"/>

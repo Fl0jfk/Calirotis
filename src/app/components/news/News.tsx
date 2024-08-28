@@ -41,11 +41,11 @@ export default function News() {
     );
   }
   return (
-    <section className="p-8 flex flex-col items-center justify-center gap-8 text-white sm:p-4">
+    <section className="p-8 flex flex-col items-center justify-center gap-8 text-white max-w-[1000px]">
       <h2 className="text-6xl">On parle de nous !</h2>
       {sortedNews ? (
-        <div className="flex items-center justify-center p-4 bg-gray-600 rounded-lg shadow-md h-full gap-4">
-          <div className="flex flex-col justify-center gap-4">
+        <div className="flex items-center justify-center p-4 bg-gray-600 rounded-lg shadow-md h-full gap-4 sm:flex-col sm:gap-0">
+          <div className="flex flex-col justify-center gap-4 sm:gap-2">
             <p>{sortedNews.daily}</p>
             <Image
               src={sortedNews.miniature}
@@ -57,7 +57,7 @@ export default function News() {
             />
           </div>
           <div className="flex flex-col justify-between gap-6 mt-8 sm:gap-2">
-            <h3 className="text-2xl">{sortedNews.name}</h3>
+            <h3 className="text-2xl sm:text-xl">{sortedNews.name}</h3>
             <p>{sortedNews.message}</p>
             <Link href={sortedNews.link} target="_blank" rel="noopener noreferrer" className="underline">
             Lire l'article
