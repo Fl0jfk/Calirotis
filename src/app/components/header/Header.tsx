@@ -38,11 +38,11 @@ export default function Header(){
                 <div className='flex items-center h-full sm:w-4/12 md:w-4/12'>
                     {data.profile.logo &&
                         <Link href="/">
-                            <Image src={data.profile.logo} alt='Mon memoji' width={70} height={70} className={`cursor-pointer z-[8] ${opacityLogo}`} onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>
+                            <Image src={data.profile.logo} alt='Mon memoji' width={60} height={60} className={`cursor-pointer z-[8] ${opacityLogo}`} onClick={()=>{window.scrollTo({top:0, left:0, behavior:'smooth'})}}/>
                         </Link>
                     }
                 </div>
-                <p className='w-4/12 uppercase mr-[50px] lg:mr-0 xl:mr-0 lg:ml-[250px] xl:ml-[250px]'>Calirotis</p>
+                <p className='w-4/12 uppercase mr-[80px] lg:mr-0 xl:mr-0 lg:ml-[250px] xl:ml-[250px]'>Calirotis</p>
                 <div className='flex justify-end items-center sm:mt-[-5px] h-full'>
                     <Navbar menuOpened={menuOpened} onLinkClick={handleLinkClick}/>
                     <div className='flex justify-end w-[40] items-center h-full' onClick={() => handleClick()}>

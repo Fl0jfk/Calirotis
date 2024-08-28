@@ -177,5 +177,16 @@
             "rating":5,
             "message":"Prestation de qualité! Que des compliments de la part, de nos invités."
         }
+    ],
+    "news":[
+        {
+            "id":1,
+            "daily":"Actu.fr",
+            "name": "Trois jours d'animations ce week-end dans ce village de l'Eure",
+            "miniature": "https://calirotisassets.s3.eu-west-3.amazonaws.com/news/News+Muids.png",
+            "link": "https://actu.fr/normandie/muids_27422/trois-jours-danimations-ce-week-end-dans-ce-village-de-leure_61372737.html",
+            "message": "À l’heure du déjeuner, le comité des fêtes proposera un cochon de lait grillé à la broche préparé par le traiteur Calirôtis de Saint-Pierre-du-Vauvray accompagné de sa poêlée provençale.",
+            "date": "19/07/2024"
+        }
     ]
 }

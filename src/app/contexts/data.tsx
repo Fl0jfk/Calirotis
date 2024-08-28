@@ -43,6 +43,16 @@ type Reviews = {
   message:string;
 }
 
+type News = {
+  id:number;
+  daily:string;
+  name:string;
+  miniature:string;
+  link:string;
+  message:string;
+  date:string;
+}
+
 type Data = {
   profile: Profile;
   categories: Categories[];
@@ -51,6 +61,7 @@ type Data = {
   imageBarbecue: ImageBarbecue[];
   imageAccompagnement: ImageAccompagnement[];
   reviews: Reviews[];
+  news: News[];
   error: Error | null;
 };
 
@@ -67,6 +78,7 @@ const initialData: Data = {
   imageBarbecue:[],
   imageAccompagnement:[],
   reviews:[],
+  news:[],
   error: null
 };
 
@@ -75,7 +87,6 @@ const DataContext = createContext<Data | undefined>(undefined);
 export const DataProvider = ({ children }: PropsWithChildren<{}>) => {
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<Data | undefined>(undefined);
-
   const fetchData = useCallback(async () => {
     try {
       const response = await fetch("https://calirotisassets.s3.eu-west-3.amazonaws.com/data.json");
@@ -88,15 +99,11 @@ export const DataProvider = ({ children }: PropsWithChildren<{}>) => {
       setError(err instanceof Error ? err : new Error("An error occurred"));
     }
   }, []);
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
   return (
-    <DataContext.Provider value={data || initialData}>
-      {children}
-    </DataContext.Provider>
+    <DataContext.Provider value={data || initialData}>{children}</DataContext.Provider>
   );
 };
 

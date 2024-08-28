@@ -3,6 +3,7 @@ import Banner from './components/banner/Banner';
 import Testimonials from './components/testimonials/Testimonials';
 import RollingSlider from './components/slider/RollingSlider';
 import Modal from './components/modals/Modal';
+import News from './components/news/News';
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
           <RollingSlider/>
           <Banner/>
           <Testimonials/>
+          <News/>
           <Modal/>
         </main>
     </> 
