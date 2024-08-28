@@ -4,7 +4,7 @@ import FormContact from "../components/form/FormContact";
 
 export default function Contact(){
     return (
-                <main className="p-4 flex flex-col items-center w-full max-w-[1500px] mx-auto gap-8 justify-center sm:pt-[10vh] md:pt-[10vh]">
+                <main className="p-4 flex flex-col items-center w-full max-w-[1500px] mx-auto gap-8 justify-center sm:pt-[15vh] md:pt-[15vh]">
                     <h2 className='text-7xl mb-10 text-center'>Contact</h2>
                     <div className="flex items-center w-full justify-center">
                         <p>Vous pouvez nous joindre directement par 

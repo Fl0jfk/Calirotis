@@ -1,6 +1,8 @@
+import Image from "next/image"
+
 export default function About (){
     return (
-        <main className="w-full flex flex-col p-6 items-center gap-8 sm:pt-[10vh] md:pt-[10vh]">
+        <main className="w-full flex flex-col p-6 items-center gap-8 sm:pt-[15vh] md:pt-[15vh]">
             <h2 className="text-6xl">À propos</h2>
             <div className="flex-col w-full flex items-center rounded-xl h-full max-w-[1000px]">
                 <div className="w-full h-full p-8 flex flex-col items-center text-xl bg-gray-700 rounded-xl">
@@ -10,6 +12,7 @@ export default function About (){
                     <p className="text-start w-full">Je mets à votre service mon professionnalisme et ma passion pour vous permettre de profiter sans vous souciez de votre repas.</p>
                 </div>
             </div>
+            <Image src={"https://calirotisassets.s3.eu-west-3.amazonaws.com/photosmartin/IMG_2704.jpeg"} alt="photo de martin" width={400} height={400} className="rounded-xl w-full max-w-[1000px] height-auto"/>
         </main>
     )
 }
