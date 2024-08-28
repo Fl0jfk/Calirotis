@@ -129,7 +129,7 @@ function FormContact () {
                     <textarea
                     rows={2}
                     id='message'
-                    placeholder='Écrivez votre message ici (le lieu de prestation etc.)'
+                    placeholder='Posez vos questions ou autres demandes ici'
                     className='w-full resize-none rounded-xl border border-gray-300 bg-white py-3 px-6 text-base font-medium text-gray-700 outline-none focus:border-black-500 focus:shadow-md text-black'
                     {...register('message', { required: true })}
                     ></textarea>
