@@ -28,7 +28,7 @@ export default function Slide({name, img, shortDescription}: SliderProps) {
                         <p className='text-white text-3xl z-[2]'>{shortDescription}</p> 
                     </div>       
                     {img && 
-                        <Image src={img} fill alt={name} style={{objectFit:"cover"}} className='rounded-3xl select-none pointer-events-none brightness-75' sizes='28vw'/>
+                        <Image src={img} fill alt={name} style={{objectFit:"cover"}} quality={100} className='rounded-3xl select-none pointer-events-none brightness-75' sizes='35vw'/>
                     }
                     <div className='w-[35px] h-[35px] z-[2] absolute top-[550px] left-[270px] sm:top-[450px] sm:left-[230px] bg-gray-700 rounded-full z-[1] p-2'>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
