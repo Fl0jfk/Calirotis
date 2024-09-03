@@ -1,6 +1,8 @@
 "use client"
 
 import type { Viewport } from 'next'
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Roboto from 'next/font/local'
 import './globals.css'
 import AxeptioInjector from './utils/AxeptioInjector';
@@ -38,6 +40,20 @@ const metaDetails: Record<string, { title: string; description: string }> = {
 };
 
 export default function RootLayout({children}:{children: React.ReactNode}){
+  const pathname = usePathname();
+  const { title, description } = metaDetails[pathname] || {};
+  useEffect(() => {
+    document.title = title;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', description);
+    } else {
+      const newMetaDescription = document.createElement('meta');
+      newMetaDescription.name = 'description';
+      newMetaDescription.content = description;
+      document.head.appendChild(newMetaDescription);
+    }
+  }, [pathname, title, description]);
   return (
     <html lang="fr">
       <body className={`${roboto.className} bg-black text-white antialiased`}>
