@@ -22,6 +22,21 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
+const metaDetails: Record<string, { title: string; description: string }> = {
+  '/': {
+    title: 'Calirotis : Votre expert en rotisserie',
+    description: 'Traiteur spécialisé en rotisserie, cochon de lait, agneau, barbecue, mechoui',
+  },
+  '/contact': {
+    title: 'Contact - Calirotis',
+    description: 'Contactez-nous pour un devis',
+  },
+  '/about': {
+    title: 'À propos de nous - Calirotis',
+    description: 'Venez me découvrir et n\'hésitez pas à me contacter',
+  },
+};
+
 export default function RootLayout({children}:{children: React.ReactNode}){
   return (
     <html lang="fr">
