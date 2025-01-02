@@ -35,7 +35,7 @@ function Footer(){
             </div>
             <p className="text-center">L&apos;expert du cochon de lait en Normandie</p>
             <p className="text-white self-center text-lg">
-                &copy; 2024 
+                &copy; 2025 
                 <Link href={"/"} className="text-[#6f3d47]"> Calirotis </Link>
                   - Tous droits réservés | Une création de 
                 <Link href={"https://fl0jfk.com"} target="blank"> Fl0jfk
