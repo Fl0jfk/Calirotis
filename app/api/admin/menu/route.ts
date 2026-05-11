@@ -57,10 +57,7 @@ function isAdminAuthorized(req: Request): boolean {
   return req.headers.get("x-admin-key") === expected;
 }
 
-async function signedGet(st: StorageContext, key: string) {
-  return getSignedUrl(st.s3, new GetObjectCommand({ Bucket: st.bucket, Key: key }), { expiresIn: 60 });
-}
-
+async function signedGet(st: StorageContext, key: string) { return getSignedUrl(st.s3, new GetObjectCommand({ Bucket: st.bucket, Key: key }), { expiresIn: 60 })}
 async function signedPut(st: StorageContext, key: string, contentType: string) {
   return getSignedUrl(
     st.s3,
@@ -68,7 +65,6 @@ async function signedPut(st: StorageContext, key: string, contentType: string) {
     { expiresIn: 60 },
   );
 }
-
 function publicMediaUrl(objectKey: string) {
   return `/api/public/media?key=${encodeURIComponent(objectKey)}`;
 }
