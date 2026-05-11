@@ -1,7 +1,7 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
-import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
+import { getStorage, storageConfigErrorJson, storageRuntimeDebug, type StorageContext } from "../../../../lib/storage-env";
 
 const KEY = "market.json";
 
@@ -59,6 +59,19 @@ export async function GET() {
   if (!st) {
     return NextResponse.json(storageConfigErrorJson(), { status: 503 });
   }
-  const market = await loadMarket(st);
-  return NextResponse.json(market);
+  try {
+    const market = await loadMarket(st);
+    return NextResponse.json(market);
+  } catch (e) {
+    const err = e as { name?: string; message?: string };
+    return NextResponse.json(
+      {
+        error: "Erreur serveur lors du chargement du market (signature S3 ou fetch).",
+        debug: storageRuntimeDebug(),
+        name: err.name || "Error",
+        message: err.message || "",
+      },
+      { status: 500 },
+    );
+  }
 }

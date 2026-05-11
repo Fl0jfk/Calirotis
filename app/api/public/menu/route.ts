@@ -1,7 +1,7 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
-import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
+import { getStorage, storageConfigErrorJson, storageRuntimeDebug, type StorageContext } from "../../../../lib/storage-env";
 
 const KEY = "menu.json";
 
@@ -51,18 +51,31 @@ export async function GET() {
   if (!st) {
     return NextResponse.json(storageConfigErrorJson(), { status: 503 });
   }
-  const menu = await loadMenu(st);
-  const items = (menu.items || []).map((it) => {
-    if (!it || typeof it !== "object") return it;
-    const row = it as Record<string, unknown>;
-    const photo = row.photo_url;
-    if (typeof photo === "string" || photo === null || photo === undefined) {
-      return { ...row, photo_url: rewriteUploadPhotoUrl(photo as string | null, st.bucket, st.region) };
-    }
-    return it;
-  });
-  return NextResponse.json(
-    { items },
-    { headers: { "Cache-Control": "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400" } },
-  );
+  try {
+    const menu = await loadMenu(st);
+    const items = (menu.items || []).map((it) => {
+      if (!it || typeof it !== "object") return it;
+      const row = it as Record<string, unknown>;
+      const photo = row.photo_url;
+      if (typeof photo === "string" || photo === null || photo === undefined) {
+        return { ...row, photo_url: rewriteUploadPhotoUrl(photo as string | null, st.bucket, st.region) };
+      }
+      return it;
+    });
+    return NextResponse.json(
+      { items },
+      { headers: { "Cache-Control": "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400" } },
+    );
+  } catch (e) {
+    const err = e as { name?: string; message?: string };
+    return NextResponse.json(
+      {
+        error: "Erreur serveur lors du chargement du menu (signature S3 ou fetch).",
+        debug: storageRuntimeDebug(),
+        name: err.name || "Error",
+        message: err.message || "",
+      },
+      { status: 500 },
+    );
+  }
 }

@@ -26,6 +26,24 @@ function resolveRegion(): string {
   return (  process.env.REGION || process.env.STORAGE_REGION || process.env.AWS_REGION || "eu-west-3").trim();
 }
 
+export function storageRuntimeDebug() {
+  const bucketKeys = ["BUCKET_NAME", "STORAGE_BUCKET", "S3_BUCKET_NAME"];
+  const regionKeys = ["REGION", "STORAGE_REGION", "AWS_REGION"];
+  const accessKeys = ["ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID"];
+  const secretKeys = ["SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY"];
+
+  return {
+    node_env: process.env.NODE_ENV || "",
+    bucket_resolved: resolveBucket() ? "(non-vide)" : "(vide)",
+    bucket_value_len: resolveBucket().length,
+    region_resolved: resolveRegion() || "",
+    present_bucket_keys: presentEnv(bucketKeys),
+    present_region_keys: presentEnv(regionKeys),
+    present_access_key_keys: presentEnv(accessKeys),
+    present_secret_key_keys: presentEnv(secretKeys),
+  };
+}
+
 export function getStorage(): StorageContext | null {
   const bucket = resolveBucket();
   if (!bucket) return null;
@@ -41,22 +59,9 @@ export function getStorage(): StorageContext | null {
 }
 
 export function storageConfigErrorJson() {
-  const bucketKeys = ["BUCKET_NAME", "STORAGE_BUCKET", "S3_BUCKET_NAME"];
-  const regionKeys = ["REGION", "STORAGE_REGION", "AWS_REGION"];
-  const accessKeys = ["ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID"];
-  const secretKeys = ["SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY"];
-
   return {
     error:
       "Stockage non configuré (bucket introuvable au runtime). Sur Amplify, ajoutez les variables dans Hosting → Environment variables et assurez-vous qu’elles s’appliquent au **runtime/SSR** (pas seulement au build), puis redéployez.",
-    debug: {
-      node_env: process.env.NODE_ENV || "",
-      bucket_resolved: resolveBucket() ? "(non-vide)" : "(vide)",
-      region_resolved: resolveRegion() || "",
-      present_bucket_keys: presentEnv(bucketKeys),
-      present_region_keys: presentEnv(regionKeys),
-      present_access_key_keys: presentEnv(accessKeys),
-      present_secret_key_keys: presentEnv(secretKeys),
-    },
+    debug: storageRuntimeDebug(),
   };
 }
