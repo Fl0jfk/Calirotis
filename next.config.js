@@ -23,6 +23,14 @@ const nextConfig = {
             }
         ]
     },
+    // Inline runtime config for Amplify:
+    // Next will replace these values during build, so SSR routes can still resolve S3 bucket/region
+    // even if Amplify doesn't provide env vars to the runtime process.
+    env: {
+        BUCKET_NAME: process.env.BUCKET_NAME || process.env.STORAGE_BUCKET || process.env.S3_BUCKET_NAME || "",
+        REGION:
+            process.env.REGION || process.env.STORAGE_REGION || process.env.AWS_REGION || "eu-west-3",
+    },
 }
 
 module.exports = nextConfig
