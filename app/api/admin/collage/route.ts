@@ -126,9 +126,7 @@ export async function POST(req: Request) {
     return NextResponse.json(await createImageUploadPresign(st, contentType));
   }
 
-  if (action === "list") {
-    return NextResponse.json(await loadCollage(st));
-  }
+  if (action === "list") { return NextResponse.json(await loadCollage(st))}
 
   if (action === "save") {
     const photos = (body.photos || [])
