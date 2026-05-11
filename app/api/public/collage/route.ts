@@ -1,7 +1,14 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
-import { getStorage, storageConfigErrorJson, storageRuntimeDebug, type StorageContext } from "../../../../lib/storage-env";
+import {
+  getStorage,
+  isS3CredentialsProviderError,
+  storageConfigErrorJson,
+  storageCredentialsMissingErrorJson,
+  storageRuntimeDebug,
+  type StorageContext,
+} from "../../../../lib/storage-env";
 
 const KEY = "collage.json";
 
@@ -68,6 +75,9 @@ export async function GET() {
       { headers: { "Cache-Control": "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400" } },
     );
   } catch (e) {
+    if (isS3CredentialsProviderError(e)) {
+      return NextResponse.json(storageCredentialsMissingErrorJson(e), { status: 503 });
+    }
     const err = e as { name?: string; message?: string };
     return NextResponse.json(
       {

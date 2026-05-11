@@ -32,15 +32,38 @@ export function storageRuntimeDebug() {
   const accessKeys = ["ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID"];
   const secretKeys = ["SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY"];
 
+  const bucketLen = resolveBucket().length;
+  const fromEnvKeys = presentEnv(bucketKeys);
+
   return {
     node_env: process.env.NODE_ENV || "",
     bucket_resolved: resolveBucket() ? "(non-vide)" : "(vide)",
-    bucket_value_len: resolveBucket().length,
+    bucket_value_len: bucketLen,
+    /** Si vide alors que bucket_resolved est non-vide, le nom vient souvent du build (ex. next.config `env`). */
+    present_bucket_keys: fromEnvKeys,
     region_resolved: resolveRegion() || "",
-    present_bucket_keys: presentEnv(bucketKeys),
     present_region_keys: presentEnv(regionKeys),
     present_access_key_keys: presentEnv(accessKeys),
     present_secret_key_keys: presentEnv(secretKeys),
+  };
+}
+
+/** SDK default chain could not find keys / instance role (typique sur Amplify sans clés ni rôle S3). */
+export function isS3CredentialsProviderError(e: unknown): boolean {
+  const err = e as { name?: string; message?: string };
+  if (err.name === "CredentialsProviderError") return true;
+  const m = (err.message || "").toLowerCase();
+  return m.includes("could not load credentials");
+}
+
+export function storageCredentialsMissingErrorJson(e: unknown) {
+  const err = e as { name?: string; message?: string };
+  return {
+    error:
+      "AWS : aucune identité pour S3 (CredentialsProviderError). Sur Amplify, ajoutez les variables **AWS_ACCESS_KEY_ID** et **AWS_SECRET_ACCESS_KEY** (ou **ACCESS_KEY_ID** + **SECRET_ACCESS_KEY** comme en local), puis redéployez. Alternative : attacher un rôle IAM au compute Amplify avec s3:GetObject / PutObject sur ce bucket.",
+    debug: storageRuntimeDebug(),
+    name: err.name || "CredentialsProviderError",
+    message: err.message || "",
   };
 }
 

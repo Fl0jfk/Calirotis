@@ -1,6 +1,11 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
-import { getStorage, storageConfigErrorJson } from "../../../../lib/storage-env";
+import {
+  getStorage,
+  isS3CredentialsProviderError,
+  storageConfigErrorJson,
+  storageCredentialsMissingErrorJson,
+} from "../../../../lib/storage-env";
 
 function contentTypeFromKey(key: string): string | null {
   const lower = key.toLowerCase();
@@ -57,6 +62,9 @@ export async function GET(req: Request) {
       },
     });
   } catch (e) {
+    if (isS3CredentialsProviderError(e)) {
+      return NextResponse.json(storageCredentialsMissingErrorJson(e), { status: 503 });
+    }
     const err = e as { name?: string; $metadata?: { httpStatusCode?: number }; message?: string };
     console.error("[Calirotis media] GetObject échoué", {
       key,
