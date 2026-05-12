@@ -183,7 +183,7 @@ export default function HomePage() {
                   <p className="font-hand text-lg font-bold">Devis gratuit !</p>
                 </div>
                 <div className="absolute -left-4 -top-4 rounded-2xl bg-bordeaux-700 px-4 py-2 text-white shadow-lg">
-                  <p className="font-hand text-base">🦐 Fait maison</p>
+                  <p className="font-hand text-base">Fait maison</p>
                 </div>
               </div>
             </div>
