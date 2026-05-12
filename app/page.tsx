@@ -134,7 +134,7 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto w-full max-w-4xl text-center">
           <div
             className={
-              visibleMarkets.length > 0 ? "flex justify-center px-0 pt-2 max-sm:pt-4 sm:px-6" : "flex justify-center px-0 sm:px-6"
+              visibleMarkets.length > 0 ? "flex justify-center px-0 pt-2 max-sm:pt-9 sm:px-6" : "flex justify-center px-0 max-sm:pt-5 sm:px-6"
             }
           >
             <PhotoCollage />
