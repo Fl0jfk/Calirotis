@@ -19,6 +19,8 @@ type MenuItem = {
 type MenuData = { items: MenuItem[] };
 type CollagePhoto = { id: string; src: string; alt: string };
 type CollageData = { photos: CollagePhoto[] };
+type Review = { id: string; author: string; rating: number; text: string; date: string; google_url?: string | null };
+type ReviewsData = { reviews: Review[] };
 type QuoteRequest = {
   id: string;
   last_name: string;
@@ -175,12 +177,42 @@ async function uploadMenuPhoto(file: File) {
   return j.photo_url;
 }
 
+async function fetchReviewsAdmin(): Promise<ReviewsData | null> {
+  const r = await fetch("/api/admin/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...adminHeaders() },
+    body: JSON.stringify({ action: "list" }),
+  });
+  if (!r.ok) return null;
+  return (await r.json()) as ReviewsData;
+}
+
+async function saveReview(payload: Omit<Review, "id"> & { id?: string }) {
+  const action = payload.id ? "update" : "create";
+  const r = await fetch("/api/admin/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...adminHeaders() },
+    body: JSON.stringify({ action, ...payload }),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(text || `HTTP ${r.status}`);
+}
+
+async function deleteReview(id: string) {
+  const r = await fetch("/api/admin/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...adminHeaders() },
+    body: JSON.stringify({ action: "delete", id }),
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+}
+
 const TAB_KEY = "admin_active_tab";
 
-function initialTab(): "quotes" | "menu" | "market" | "collage" {
+function initialTab(): "quotes" | "menu" | "market" | "collage" | "reviews" {
   if (typeof window === "undefined") return "quotes";
   const t = localStorage.getItem(TAB_KEY);
-  if (t === "menu" || t === "market" || t === "quotes" || t === "collage") return t;
+  if (t === "menu" || t === "market" || t === "quotes" || t === "collage" || t === "reviews") return t;
   return "quotes";
 }
 
@@ -997,9 +1029,169 @@ function CollagePanel() {
   );
 }
 
+const AVATAR_COLORS = ["bg-red-500","bg-pink-500","bg-purple-600","bg-indigo-500","bg-blue-500","bg-cyan-600","bg-teal-500","bg-green-600","bg-orange-500","bg-rose-500"];
+function authorColor(name: string) { return AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length]; }
+
+function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onMouseEnter={() => setHovered(n)}
+          onMouseLeave={() => setHovered(0)}
+          onClick={() => onChange(n)}
+          className="text-2xl leading-none transition-transform hover:scale-110"
+        >
+          <span className={n <= (hovered || value) ? "text-yellow-400" : "text-gray-200"}>★</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ReviewsPanel() {
+  const [data, setData] = useState<ReviewsData | null | undefined>(undefined);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [author, setAuthor] = useState("");
+  const [rating, setRating] = useState(5);
+  const [text, setText] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [googleUrl, setGoogleUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [ok, setOk] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setData(undefined);
+    const d = await fetchReviewsAdmin();
+    setData(d);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  function resetForm() {
+    setEditingId(null); setAuthor(""); setRating(5); setText("");
+    setDate(new Date().toISOString().slice(0, 10)); setGoogleUrl("");
+    setOk(null); setErr(null);
+  }
+  function startEdit(r: Review) {
+    setEditingId(r.id); setAuthor(r.author); setRating(r.rating);
+    setText(r.text); setDate(r.date); setGoogleUrl(r.google_url || "");
+    setOk(null); setErr(null);
+  }
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!author.trim()) { setErr("Le nom est obligatoire."); return; }
+    setSaving(true); setErr(null); setOk(null);
+    try {
+      await saveReview({ id: editingId ?? undefined, author: author.trim(), rating, text: text.trim(), date, google_url: googleUrl.trim() || null });
+      setOk(editingId ? "Avis modifié." : "Avis ajouté.");
+      resetForm();
+      await load();
+    } catch (e) { setErr(e instanceof Error ? e.message : "Erreur"); }
+    setSaving(false);
+  }
+  async function onDelete(id: string) {
+    try { if (editingId === id) resetForm(); await deleteReview(id); await load(); } catch { /* ignore */ }
+  }
+
+  const reviews = data?.reviews ?? [];
+  return (
+    <div className="space-y-10 pb-16">
+      <div className="rounded-2xl border border-creme-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-display text-xl text-ardoise-900">{editingId ? "Modifier l'avis" : "Ajouter un avis"}</h2>
+          {editingId ? <button type="button" className="btn btn-ghost px-4 py-2 text-sm" onClick={resetForm}>Annuler</button> : null}
+        </div>
+        <form noValidate className="space-y-4" onSubmit={onSubmit}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="form-label">Nom du client *</label>
+              <input className="form-input" value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Jean Dupont" />
+            </div>
+            <div>
+              <label className="form-label">Date</label>
+              <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <label className="form-label">Note</label>
+            <StarPicker value={rating} onChange={setRating} />
+          </div>
+          <div>
+            <label className="form-label">Texte de l&apos;avis *</label>
+            <textarea
+              className="form-input min-h-[90px] resize-y"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Copiez-collez le texte de l'avis Google ici..."
+            />
+          </div>
+          <div>
+            <label className="form-label">Lien vers l&apos;avis Google (optionnel)</label>
+            <input
+              className="form-input"
+              value={googleUrl}
+              onChange={(e) => setGoogleUrl(e.target.value)}
+              placeholder="https://maps.app.goo.gl/..."
+            />
+            <p className="mt-1 text-xs text-ardoise-500">Collez le lien direct vers l&apos;avis depuis Google Maps — il sera affiché sur le site pour prouver l&apos;authenticité.</p>
+          </div>
+          {ok ? <p className="text-sm font-medium text-green-700">{ok}</p> : null}
+          {err ? <p className="text-sm text-red-600">{err}</p> : null}
+          <button type="submit" disabled={saving} className="btn btn-safran px-6">
+            {saving ? (editingId ? "Modification..." : "Ajout...") : editingId ? "Enregistrer" : "Ajouter l'avis"}
+          </button>
+        </form>
+      </div>
+
+      <div>
+        <h2 className="mb-5 font-display text-xl text-ardoise-900">Avis publiés ({reviews.length})</h2>
+        {data === undefined ? (
+          <div className="flex justify-center py-8"><div className="h-8 w-8 animate-spin rounded-full border-4 border-bordeaux-700 border-t-transparent" /></div>
+        ) : reviews.length === 0 ? (
+          <p className="text-sm text-ardoise-500">Aucun avis pour le moment.</p>
+        ) : (
+          <div className="space-y-3">
+            {reviews.map((r) => (
+              <div key={r.id} className={`flex items-start gap-4 rounded-xl border bg-white px-5 py-4 transition-colors ${editingId === r.id ? "border-bordeaux-400 ring-2 ring-bordeaux-100" : "border-creme-200 hover:border-bordeaux-200"}`}>
+                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${authorColor(r.author)}`}>
+                  {r.author.charAt(0).toUpperCase()}
+                </div>
+                <button type="button" className="min-w-0 flex-1 text-left" onClick={() => startEdit(r)}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-ardoise-900">{r.author}</span>
+                    <span className="text-yellow-400">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
+                    <span className="text-xs text-ardoise-400">{r.date}</span>
+                    {r.google_url ? <span className="tag bg-blue-50 text-xs text-blue-600">Lien Google ✓</span> : null}
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-sm text-ardoise-500">{r.text}</p>
+                  <p className="mt-0.5 text-xs text-bordeaux-600">Cliquer pour modifier</p>
+                </button>
+                <button
+                  type="button"
+                  title="Supprimer"
+                  className="flex-shrink-0 rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                  onClick={(e) => { e.stopPropagation(); void onDelete(r.id); }}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [auth, setAuth] = useState<boolean | null>(null);
-  const [tab, setTab] = useState<"quotes" | "menu" | "market" | "collage">("quotes");
+  const [tab, setTab] = useState<"quotes" | "menu" | "market" | "collage" | "reviews">("quotes");
   useEffect(() => {
     setAuth(localStorage.getItem("admin_auth") === "1");
     setTab(initialTab());
@@ -1037,6 +1229,7 @@ export default function AdminPage() {
               ["menu", "Menu"],
               ["market", "Événements"],
               ["collage", "Photocollage"],
+              ["reviews", "Avis"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -1057,6 +1250,7 @@ export default function AdminPage() {
         {tab === "menu" ? <MenuPanel /> : null}
         {tab === "market" ? <EventsPanel /> : null}
         {tab === "collage" ? <CollagePanel /> : null}
+        {tab === "reviews" ? <ReviewsPanel /> : null}
       </div>
     </div>
   );

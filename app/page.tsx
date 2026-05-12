@@ -10,6 +10,7 @@ import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { PhotoCollage } from "./components/PhotoCollage";
 import { getBlurDataURL } from "./lib/image-placeholder";
+import { ReviewsCarousel } from "./components/ReviewsCarousel";
 type MenuCategoryNorm = "starter" | "main_dish" | "dessert";
 type MarketEntry = { id: string; date: string; place: string };
 type MarketsData = { markets: MarketEntry[] };
@@ -356,6 +357,20 @@ export default function HomePage() {
               title="Carte Google Maps Calirotis Traiteur"
             />
           </div>
+        </div>
+      </section>
+      <section className="bg-white py-20">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="mb-10 text-center">
+            <span className="section-label mb-3 block text-bordeaux-600">Ils nous font confiance</span>
+            <h2 className="section-title mb-3 text-ardoise-800">
+              Ce que disent <span className="text-bordeaux-700">nos clients</span>
+            </h2>
+            <p className="mx-auto max-w-lg font-body text-ardoise-500">
+              Des retours authentiques, directement issus de nos prestations.
+            </p>
+          </div>
+          <ReviewsCarousel />
         </div>
       </section>
       <section className="relative overflow-hidden bg-gradient-to-br from-ardoise-800 to-ardoise-900 py-24 text-white">
