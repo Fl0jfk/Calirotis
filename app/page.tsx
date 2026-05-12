@@ -3,6 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import feteImg from "./assets/Fête.webp";
+import mariageImg from "./assets/Mariage.webp";
+import businessImg from "./assets/Business.webp";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { PhotoCollage } from "./components/PhotoCollage";
@@ -355,7 +358,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section className="relative overflow-hidden bg-gradient-to-br from-ardoise-800 to-ardoise-900 py-24 text-center text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-ardoise-800 to-ardoise-900 py-24 text-white">
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -364,23 +367,74 @@ export default function HomePage() {
           }}
         />
         <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-bordeaux-700/20 blur-3xl" />
-        <div className="relative mx-auto max-w-2xl px-6">
-          <div className="mb-6 text-6xl">🍖</div>
-          <h2 className="mb-4 font-display text-4xl md:text-5xl">
-            Songez à préparer
-            <br />
-            <span className="text-safran-400">un repas de fête</span>
-          </h2>
-          <p className="mb-10 font-body text-lg leading-relaxed text-ardoise-300">
-            Pour votre mariage, baptême, événement d&apos;entreprise ou fête de famille, je mets
-            mon professionnalisme et ma passion à votre service pour un stand unique et un
-            service sans stress.
-          </p>
-          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+        <div className="relative mx-auto max-w-6xl px-6">
+          <div className="mb-12 text-center">
+            <div className="mb-4 text-6xl">🍖</div>
+            <h2 className="mb-3 font-display text-4xl md:text-5xl">
+              Pour chaque occasion,
+              <br />
+              <span className="text-safran-400">un service sur mesure</span>
+            </h2>
+            <p className="mx-auto max-w-xl font-body text-lg text-ardoise-300">
+              Rôtisserie à la broche, cochon de lait, méchoui ou barbecue géant — je m&apos;adapte à votre événement.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+            <div className="group flex flex-col items-center text-center">
+              <div className="relative h-64 w-full overflow-hidden rounded-2xl shadow-2xl">
+                <Image
+                  src={mariageImg}
+                  alt="Mariage et baptême"
+                  fill
+                  className="object-contain transition-transform duration-500 sm:scale-140 sm:group-hover:scale-145 scale-100 group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
+              </div>
+              <h3 className="mb-2 mt-6 font-hand text-xl font-bold text-safran-400">💍 Mariage &amp; Baptême</h3>
+              <p className="font-body text-sm leading-relaxed text-ardoise-300">
+                Rôtisserie à la broche pour le plus beau de vos jours. Stand soigné, service clé en main et prestation sur-mesure de 30 à 300 convives.
+              </p>
+            </div>
+
+            <div className="group flex flex-col items-center text-center">
+              <div className="relative h-64 w-full overflow-hidden rounded-2xl shadow-2xl">
+                <Image
+                  src={feteImg}
+                  alt="Fêtes et famille"
+                  fill
+                  className="object-contain transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
+              </div>
+              <h3 className="mb-2 mt-6 font-hand text-xl font-bold text-safran-400">🎉 Fêtes &amp; Famille</h3>
+              <p className="font-body text-sm leading-relaxed text-ardoise-300">
+                Cochon de lait, méchoui ou barbecue géant pour vos anniversaires, réunions et fêtes de famille. Une ambiance conviviale qui régale petits et grands.
+              </p>
+            </div>
+
+            <div className="group flex flex-col items-center text-center">
+              <div className="relative h-64 w-full overflow-hidden rounded-2xl shadow-2xl">
+                <Image
+                  src={businessImg}
+                  alt="Événements d'entreprise"
+                  fill
+                  className="object-contain transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
+              </div>
+              <h3 className="mb-2 mt-6 font-hand text-xl font-bold text-safran-400">🏢 Entreprise &amp; Pro</h3>
+              <p className="font-body text-sm leading-relaxed text-ardoise-300">
+                Séminaires, foires, journées d&apos;équipe ou réceptions corporate. Un stand professionnel, un service ponctuel et une cuisine qui marque les esprits.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/devis" className="btn btn-braise px-10 py-4 text-base">
               Demander un devis gratuit
             </Link>
-            <a href="tel:0699512290" className="btn btn-white px-8 py-4 text-base"> 📞 06.99.51.22.90</a>
+            <a href="tel:0699512290" className="btn btn-white px-8 py-4 text-base">📞 06.99.51.22.90</a>
           </div>
         </div>
       </section>
