@@ -94,6 +94,7 @@ function PickTile({
             src={item.photo_url}
             alt={item.name}
             fill
+            unoptimized={item.photo_url.startsWith("/api/")}
             className="object-cover"
             sizes="(max-width: 640px) 45vw, 200px"
           />
@@ -128,6 +129,7 @@ function PickTile({
                 alt={item.partner_name}
                 width={14}
                 height={14}
+                unoptimized={item.partner_logo_url.startsWith("/api/")}
                 className="h-[14px] w-[14px] rounded-full object-cover"
               />
             ) : (

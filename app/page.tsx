@@ -298,6 +298,7 @@ export default function HomePage() {
                                     width={18}
                                     height={18}
                                     quality={60}
+                                    unoptimized={item.partner_logo_url.startsWith("/api/")}
                                     className="h-[18px] w-[18px] rounded-full object-cover"
                                   />
                                 ) : (
