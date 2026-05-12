@@ -62,7 +62,14 @@ export function PhotoCollage() {
         <div className="broche-pin-tip" />
         <div className="broche-pin-tip broche-pin-tip-end" />
         <div className="broche-single">
-          <Image src={currentPhoto.src} alt={currentPhoto.alt} fill sizes="320px" className="object-cover" />
+          <Image
+            src={currentPhoto.src}
+            alt={currentPhoto.alt}
+            fill
+            sizes="320px"
+            unoptimized={currentPhoto.src.startsWith("/api/")}
+            className="object-cover"
+          />
         </div>
       </div>
 
