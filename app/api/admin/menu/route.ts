@@ -112,8 +112,9 @@ export async function POST(req: Request) {
   }
 
   const body = (await req.json()) as {
-    action?: "list" | "create" | "update" | "delete" | "presign_photo";
+    action?: "list" | "create" | "update" | "delete" | "presign_photo" | "reorder";
     id?: string;
+    ids?: string[];
     name?: string;
     description?: string;
     photo_url?: string | null;
@@ -194,6 +195,17 @@ export async function POST(req: Request) {
     };
     await saveMenu(st, next);
     return NextResponse.json({ ok: true, id: body.id });
+  }
+
+  if (action === "reorder") {
+    const ids = body.ids;
+    if (!Array.isArray(ids)) return NextResponse.json({ error: "ids requis" }, { status: 400 });
+    const idToItem = new Map((menu.items || []).map((it) => [it.id, it]));
+    const reordered = ids.map((id) => idToItem.get(id)).filter((it): it is MenuItem => it != null);
+    const reorderedIds = new Set(ids);
+    const rest = (menu.items || []).filter((it) => !reorderedIds.has(it.id));
+    await saveMenu(st, { items: [...reordered, ...rest] });
+    return NextResponse.json({ ok: true });
   }
 
   return NextResponse.json({ error: "Action inconnue" }, { status: 400 });

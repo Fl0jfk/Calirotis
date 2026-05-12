@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
-type MarketEntry = { id: string; date: string; place: string };
-type MarketsData = { markets: MarketEntry[] };
+type EventEntry = { id: string; date: string; place: string };
+type EventsData = { markets: EventEntry[] };
 type MenuItem = {
   id: string;
   name: string;
@@ -41,7 +41,6 @@ type QuotesData = { quotes: QuoteRequest[] };
 
 const ADMIN_API_KEY = process.env.NEXT_PUBLIC_ADMIN_API_KEY || "";
 
-/** Logs détaillés upload (navigateur). Mettre à true pour forcer même en prod temporairement. */
 const DEBUG_CLIENT_UPLOAD =
   process.env.NEXT_PUBLIC_DEBUG_UPLOAD === "1" || process.env.NODE_ENV === "development";
 
@@ -49,10 +48,8 @@ function clientUploadLog(...args: unknown[]) {
   if (DEBUG_CLIENT_UPLOAD) console.info("[Calirotis admin client]", ...args);
 }
 
-function marketJsonUrl() { return "/api/public/market"}
-
-function menuJsonUrl() {return "/api/public/menu"}
-
+function marketJsonUrl() { return "/api/public/market" }
+function menuJsonUrl() { return "/api/public/menu" }
 function menuJsonUrlBusted(generation: number) {
   const base = menuJsonUrl();
   const sep = base.includes("?") ? "&" : "?";
@@ -135,7 +132,17 @@ async function deleteMenuItem(id: string) {
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
 }
 
-async function saveMarketsData(data: MarketsData) {
+async function reorderMenuItems(ids: string[]) {
+  const r = await fetch("/api/admin/menu", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...adminHeaders() },
+    body: JSON.stringify({ action: "reorder", ids }),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(text || `HTTP ${r.status}`);
+}
+
+async function saveEventsData(data: EventsData) {
   const r = await fetch("/api/admin/market", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...adminHeaders() },
@@ -155,7 +162,7 @@ async function uploadMenuPhoto(file: File) {
   if (!contentType.startsWith("image/")) throw new Error("Le fichier doit être une image.");
   const fd = new FormData();
   fd.append("file", file);
-  const r = await fetch("/api/admin/upload-photo", { method: "POST", headers: adminHeaders(), body: fd});
+  const r = await fetch("/api/admin/upload-photo", { method: "POST", headers: adminHeaders(), body: fd });
   const text = await r.text();
   clientUploadLog("upload-photo HTTP", r.status, text.slice(0, 300));
   if (!r.ok) {
@@ -178,7 +185,7 @@ function initialTab(): "quotes" | "menu" | "market" | "collage" {
 }
 
 async function fetchCollageAdmin() {
-  const r = await fetch("/api/admin/collage", { method: "POST", headers: { "Content-Type": "application/json", ...adminHeaders() }, body: JSON.stringify({ action: "list" })});
+  const r = await fetch("/api/admin/collage", { method: "POST", headers: { "Content-Type": "application/json", ...adminHeaders() }, body: JSON.stringify({ action: "list" }) });
   if (!r.ok) return null;
   return (await r.json()) as CollageData;
 }
@@ -188,7 +195,7 @@ async function saveCollageAdmin(photos: CollagePhoto[]) {
     count: photos.length,
     srcPrefixes: photos.map((p) => p.src.slice(0, 72)),
   });
-  const r = await fetch("/api/admin/collage", { method: "POST", headers: { "Content-Type": "application/json", ...adminHeaders() }, body: JSON.stringify({ action: "save", photos })});
+  const r = await fetch("/api/admin/collage", { method: "POST", headers: { "Content-Type": "application/json", ...adminHeaders() }, body: JSON.stringify({ action: "save", photos }) });
   const text = await r.text();
   clientUploadLog("collage save HTTP", r.status, text.slice(0, 400));
   if (!r.ok) {
@@ -214,7 +221,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     setLoading(true);
     setError(null);
     try {
-      const r = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password })});
+      const r = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
       if (!r.ok) {
         const j = (await r.json().catch(() => ({}))) as { error?: string };
         setError(j.error || "Mot de passe incorrect");
@@ -239,7 +246,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         <form className="space-y-5" onSubmit={onSubmit}>
           <div>
             <label className="form-label">Mot de passe</label>
-            <input type="password" className="form-input" placeholder="••••••••" required autoFocus value={password} onChange={(e) => setPassword(e.target.value)}/>
+            <input type="password" className="form-input" placeholder="••••••••" required autoFocus value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <button type="submit" disabled={loading} className="btn btn-safran w-full justify-center py-3">
@@ -264,11 +271,7 @@ function formatDishIds(ids: unknown, names: Record<string, string>): string {
   return ids.filter((id): id is string => typeof id === "string").map((id) => names[id] || id).filter(Boolean).join(", ");
 }
 
-function formatDishLabels(
-  ids: unknown,
-  labels: unknown,
-  names: Record<string, string>,
-): string {
+function formatDishLabels(ids: unknown, labels: unknown, names: Record<string, string>): string {
   if (Array.isArray(labels)) {
     const cleanLabels = labels.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim());
     if (cleanLabels.length > 0) return cleanLabels.join(", ");
@@ -282,7 +285,7 @@ function QuoteCard({ q, dishNames }: { q: QuoteRequest; dishNames: Record<string
   const eventDate = q.event_date || "Date non précisée";
   const starters = formatDishLabels(q.starters, q.starters_labels, dishNames);
   const desserts = formatDishLabels(q.desserts, q.desserts_labels, dishNames);
-  const mainLabel = typeof q.main_dish_label === "string" && q.main_dish_label.trim() ? q.main_dish_label.trim(): q.main_dish ? dishNames[q.main_dish] || q.main_dish : "";
+  const mainLabel = typeof q.main_dish_label === "string" && q.main_dish_label.trim() ? q.main_dish_label.trim() : q.main_dish ? dishNames[q.main_dish] || q.main_dish : "";
   const fullName = `${q.first_name ?? ""} ${q.last_name ?? ""}`.trim() || "—";
   return (
     <div className="rounded-2xl border border-creme-200 bg-white p-6 shadow-sm">
@@ -312,24 +315,9 @@ function QuoteCard({ q, dishNames }: { q: QuoteRequest; dishNames: Record<string
         {q.event_place ? <div className="sm:col-span-2">📍 {q.event_place}</div> : null}
       </div>
       <div className="space-y-1 border-t border-creme-100 pt-3 text-sm">
-        {starters ? (
-          <p>
-            <span className="font-medium text-ardoise-500">Entrées : </span>
-            {starters}
-          </p>
-        ) : null}
-        {mainLabel ? (
-          <p>
-            <span className="font-medium text-ardoise-500">Plat principal : </span>
-            {mainLabel}
-          </p>
-        ) : null}
-        {desserts ? (
-          <p>
-            <span className="font-medium text-ardoise-500">Desserts : </span>
-            {desserts}
-          </p>
-        ) : null}
+        {starters ? <p><span className="font-medium text-ardoise-500">Entrées : </span>{starters}</p> : null}
+        {mainLabel ? <p><span className="font-medium text-ardoise-500">Plat principal : </span>{mainLabel}</p> : null}
+        {desserts ? <p><span className="font-medium text-ardoise-500">Desserts : </span>{desserts}</p> : null}
         {q.message ? <p className="mt-2 italic text-ardoise-600">{q.message}</p> : null}
       </div>
     </div>
@@ -350,9 +338,7 @@ function QuotesPanel() {
     }
     setData(q);
   }, []);
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
   const sorted = useMemo(() => {
     if (!data?.quotes) return [];
     return [...data.quotes].filter((row) => row && typeof row === "object").sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
@@ -376,13 +362,19 @@ function QuotesPanel() {
         </div>
       ) : (
         <div className="space-y-4">
-          {sorted.map((q) => (
-            <QuoteCard key={q.id} q={q} dishNames={dishNames} />
-          ))}
+          {sorted.map((q) => <QuoteCard key={q.id} q={q} dishNames={dishNames} />)}
         </div>
       )}
     </div>
   );
+}
+
+const MENU_CATS = ["starter", "main_dish", "dessert"] as const;
+
+function catHeader(cat: "starter" | "main_dish" | "dessert") {
+  if (cat === "main_dish") return "🍲 Plats principaux";
+  if (cat === "dessert") return "🍮 Desserts";
+  return "🥗 Entrées";
 }
 
 function MenuPanel() {
@@ -401,6 +393,7 @@ function MenuPanel() {
   const [menuOk, setMenuOk] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const menuPhotoFileRef = useRef<HTMLInputElement>(null);
+
   function resetForm() {
     setEditingId(null);
     setName("");
@@ -433,9 +426,8 @@ function MenuPanel() {
     const m = await loadMenuForAdmin(gen);
     setMenu(m);
   }, [gen]);
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
+
   async function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -448,15 +440,12 @@ function MenuPanel() {
       setPhotoNote(err instanceof Error ? err.message : "Erreur upload");
     }
   }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (saving) return;
     const nameTrim = name.trim();
-    if (!nameTrim) {
-      setFormError("Le nom est obligatoire.");
-      setMenuOk(null);
-      return;
-    }
+    if (!nameTrim) { setFormError("Le nom est obligatoire."); setMenuOk(null); return; }
     setSaving(true);
     setFormError(null);
     setMenuOk(null);
@@ -472,10 +461,8 @@ function MenuPanel() {
       };
       if (editingId) {
         await updateMenuItem({ id: editingId, ...payload });
-        setMenuOk("Plat modifié.");
       } else {
         await createMenuItem(payload);
-        setMenuOk("Plat enregistré.");
       }
       resetForm();
       setMenuOk(editingId ? "Plat modifié." : "Plat enregistré.");
@@ -486,16 +473,41 @@ function MenuPanel() {
     }
     setSaving(false);
   }
+
   async function onDelete(id: string) {
     try {
       if (editingId === id) resetForm();
       await deleteMenuItem(id);
       setGen((g) => g + 1);
+    } catch { /* ignore */ }
+  }
+
+  async function onMove(id: string, dir: "up" | "down") {
+    const currentItems = menu?.items ?? [];
+    const item = currentItems.find((it) => it.id === id);
+    if (!item) return;
+    const cat = normalizeMenuCategory(item.category);
+    const catIndices = currentItems
+      .map((it, i) => ({ it, i }))
+      .filter(({ it }) => normalizeMenuCategory(it.category) === cat)
+      .map(({ i }) => i);
+    const itemGlobalIdx = currentItems.findIndex((it) => it.id === id);
+    const posInCat = catIndices.indexOf(itemGlobalIdx);
+    if (dir === "up" && posInCat === 0) return;
+    if (dir === "down" && posInCat === catIndices.length - 1) return;
+    const swapGlobalIdx = dir === "up" ? catIndices[posInCat - 1] : catIndices[posInCat + 1];
+    const newItems = [...currentItems];
+    [newItems[itemGlobalIdx], newItems[swapGlobalIdx]] = [newItems[swapGlobalIdx], newItems[itemGlobalIdx]];
+    setMenu({ items: newItems });
+    try {
+      await reorderMenuItems(newItems.map((it) => it.id));
     } catch {
-      /* ignore */
+      setMenu({ items: currentItems });
     }
   }
+
   const items = menu?.items ?? [];
+
   return (
     <div className="space-y-10 pb-16">
       <div className="rounded-2xl border border-creme-200 bg-white p-6 shadow-sm">
@@ -541,31 +553,16 @@ function MenuPanel() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="form-label">Nom du partenaire (optionnel)</label>
-              <input
-                className="form-input"
-                value={partnerName}
-                onChange={(e) => setPartnerName(e.target.value)}
-                placeholder="Ex : Maison Dupont"
-              />
+              <input className="form-input" value={partnerName} onChange={(e) => setPartnerName(e.target.value)} placeholder="Ex : Maison Dupont" />
             </div>
             <div>
               <label className="form-label">Lien partenaire (optionnel)</label>
-              <input
-                className="form-input"
-                value={partnerUrl}
-                onChange={(e) => setPartnerUrl(e.target.value)}
-                placeholder="https://..."
-              />
+              <input className="form-input" value={partnerUrl} onChange={(e) => setPartnerUrl(e.target.value)} placeholder="https://..." />
             </div>
           </div>
           <div>
             <label className="form-label">Logo partenaire (URL, optionnel)</label>
-            <input
-              className="form-input"
-              value={partnerLogoUrl}
-              onChange={(e) => setPartnerLogoUrl(e.target.value)}
-              placeholder="/api/public/media?key=... ou https://..."
-            />
+            <input className="form-input" value={partnerLogoUrl} onChange={(e) => setPartnerLogoUrl(e.target.value)} placeholder="/api/public/media?key=... ou https://..." />
           </div>
           {photoNote ? <p className="text-sm text-ardoise-600">{photoNote}</p> : null}
           {menuOk ? <p className="text-sm font-medium text-green-700">{menuOk}</p> : null}
@@ -575,6 +572,7 @@ function MenuPanel() {
           </button>
         </form>
       </div>
+
       <div>
         <h2 className="mb-5 font-display text-xl text-ardoise-900">Carte actuelle</h2>
         {menu === undefined ? (
@@ -588,64 +586,89 @@ function MenuPanel() {
         ) : items.length === 0 ? (
           <p className="text-sm text-ardoise-500">Aucun plat dans la carte.</p>
         ) : (
-          <div className="space-y-2">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className={`flex items-center justify-between gap-4 rounded-xl border bg-white px-5 py-4 transition-colors ${
-                  editingId === item.id
-                    ? "border-bordeaux-400 ring-2 ring-bordeaux-100"
-                    : "border-creme-200 hover:border-bordeaux-200"
-                }`}
-              >
-                <button
-                  type="button"
-                  className="flex min-w-0 flex-1 items-center gap-4 text-left"
-                  onClick={() => startEdit(item)}
-                >
-                  {item.photo_url ? (
-                    <Image
-                      src={item.photo_url}
-                      alt=""
-                      width={100}
-                      height={100}
-                      className="h-16 w-16 flex-shrink-0 rounded-lg border border-creme-100 object-cover sm:h-20 sm:w-20"
-                    />
-                  ) : null}
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-0.5 flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-ardoise-900">{item.name}</span>
-                      <span className="tag bg-creme-100 text-xs text-ardoise-600">
-                        {categoryLabel(normalizeMenuCategory(item.category))}
-                      </span>
-                      {item.partner_name ? (
-                        <span className="tag bg-safran-100 text-xs text-safran-700">Partenaire</span>
-                      ) : null}
-                    </div>
-                    <p className="truncate text-sm text-ardoise-500">{item.description}</p>
-                    <p className="mt-1 text-xs text-bordeaux-600">Cliquer pour modifier</p>
+          <div className="space-y-8">
+            {MENU_CATS.map((cat) => {
+              const catItems = items.filter((it) => normalizeMenuCategory(it.category) === cat);
+              if (catItems.length === 0) return null;
+              return (
+                <div key={cat}>
+                  <h3 className="mb-3 font-hand text-lg font-bold text-ardoise-700">{catHeader(cat)}</h3>
+                  <div className="space-y-2">
+                    {catItems.map((item, posInCat) => (
+                      <div
+                        key={item.id}
+                        className={`flex items-center gap-2 rounded-xl border bg-white px-4 py-3 transition-colors ${
+                          editingId === item.id
+                            ? "border-bordeaux-400 ring-2 ring-bordeaux-100"
+                            : "border-creme-200 hover:border-bordeaux-200"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-0.5">
+                          <button
+                            type="button"
+                            disabled={posInCat === 0}
+                            onClick={() => void onMove(item.id, "up")}
+                            className="rounded p-1 text-ardoise-400 transition-colors hover:bg-creme-100 hover:text-ardoise-700 disabled:cursor-not-allowed disabled:opacity-25"
+                            title="Monter"
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={posInCat === catItems.length - 1}
+                            onClick={() => void onMove(item.id, "down")}
+                            className="rounded p-1 text-ardoise-400 transition-colors hover:bg-creme-100 hover:text-ardoise-700 disabled:cursor-not-allowed disabled:opacity-25"
+                            title="Descendre"
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                          onClick={() => startEdit(item)}
+                        >
+                          {item.photo_url ? (
+                            <Image
+                              src={item.photo_url}
+                              alt=""
+                              width={100}
+                              height={100}
+                              unoptimized={item.photo_url.startsWith("/api/")}
+                              className="h-14 w-14 flex-shrink-0 rounded-lg border border-creme-100 object-cover sm:h-16 sm:w-16"
+                            />
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                              <span className="font-medium text-ardoise-900">{item.name}</span>
+                              {item.partner_name ? (
+                                <span className="tag bg-safran-100 text-xs text-safran-700">Partenaire</span>
+                              ) : null}
+                            </div>
+                            <p className="truncate text-sm text-ardoise-500">{item.description}</p>
+                            <p className="mt-0.5 text-xs text-bordeaux-600">Cliquer pour modifier</p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          title="Supprimer"
+                          className="flex-shrink-0 rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                          onClick={(e) => { e.stopPropagation(); void onDelete(item.id); }}
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                </button>
-                <button
-                  type="button"
-                  title="Supprimer"
-                  className="flex-shrink-0 rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void onDelete(item.id);
-                  }}
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -653,8 +676,8 @@ function MenuPanel() {
   );
 }
 
-function MarketPanel() {
-  const [markets, setMarkets] = useState<MarketEntry[]>([]);
+function EventsPanel() {
+  const [events, setEvents] = useState<EventEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -663,43 +686,43 @@ function MarketPanel() {
     setLoading(true);
     const r = await fetch(marketJsonUrl());
     if (!r.ok) {
-      setMarkets([{ id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, date: "", place: "" }]);
+      setEvents([{ id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, date: "", place: "" }]);
       setLoading(false);
       return;
     }
-    const data = (await r.json()) as MarketsData;
+    const data = (await r.json()) as EventsData;
     const list = Array.isArray(data.markets) ? data.markets : [];
-    setMarkets(
+    setEvents(
       list.length > 0
         ? list
         : [{ id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, date: "", place: "" }],
     );
     setLoading(false);
   }, []);
-  useEffect(() => {
-    load();
-  }, [load]);
-  function addMarket() {
-    setMarkets((prev) => [
+  useEffect(() => { load(); }, [load]);
+
+  function addEvent() {
+    setEvents((prev) => [
       ...prev,
       { id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, date: "", place: "" },
     ]);
   }
-  function updateRow(idx: number, patch: Partial<MarketEntry>) { setMarkets((prev) => prev.map((m, i) => (i === idx ? { ...m, ...patch } : m)))}
-  function removeRow(idx: number) { setMarkets((prev) => prev.filter((_, i) => i !== idx))}
+  function updateRow(idx: number, patch: Partial<EventEntry>) { setEvents((prev) => prev.map((m, i) => (i === idx ? { ...m, ...patch } : m))); }
+  function removeRow(idx: number) { setEvents((prev) => prev.filter((_, i) => i !== idx)); }
+
   async function onSave() {
     if (saving) return;
     setSaving(true);
     setErrMsg(null);
     setSaved(false);
     try {
-      const valid = markets.filter((m) => m.date.trim());
-      if (valid.length !== markets.length) {
+      const valid = events.filter((m) => m.date.trim());
+      if (valid.length !== events.length) {
         setErrMsg("Renseignez une date pour chaque ligne, ou supprimez les lignes vides.");
         setSaving(false);
         return;
       }
-      await saveMarketsData({ markets: valid });
+      await saveEventsData({ markets: valid });
       setSaved(true);
       await load();
     } catch (err) {
@@ -707,17 +730,18 @@ function MarketPanel() {
     }
     setSaving(false);
   }
+
   return (
     <div className="max-w-2xl pb-16">
       <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-2xl text-ardoise-900">Marchés</h2>
+          <h2 className="font-display text-2xl text-ardoise-900">Événements</h2>
           <p className="mt-1 text-sm text-ardoise-600">
-            Sur l&apos;accueil, seuls les marchés dans les 7 prochains jours (non passés) sont affichés.
+            Sur l&apos;accueil, seuls les événements dans les 7 prochains jours (non passés) sont affichés.
           </p>
         </div>
-        <button type="button" className="btn btn-ghost shrink-0 px-4 py-2 text-sm" onClick={addMarket}>
-          Ajouter un marché
+        <button type="button" className="btn btn-ghost shrink-0 px-4 py-2 text-sm" onClick={addEvent}>
+          Ajouter un événement
         </button>
       </div>
       {loading ? (
@@ -726,7 +750,7 @@ function MarketPanel() {
         </div>
       ) : (
         <div className="space-y-4">
-          {markets.map((m, idx) => (
+          {events.map((m, idx) => (
             <div key={m.id} className="rounded-2xl border border-creme-200 bg-white p-5 shadow-sm">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -739,10 +763,10 @@ function MarketPanel() {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Lieu / nom du marché</label>
+                  <label className="form-label">Lieu / nom de l&apos;événement</label>
                   <input
                     className="form-input"
-                    placeholder="ex : Marché de Montrouge"
+                    placeholder="ex : Foire de Rouen, Marché de Noël..."
                     value={m.place}
                     onChange={(e) => updateRow(idx, { place: e.target.value })}
                   />
@@ -754,7 +778,7 @@ function MarketPanel() {
                   className="text-sm font-medium text-red-600 hover:underline"
                   onClick={() => removeRow(idx)}
                 >
-                  Supprimer ce marché
+                  Supprimer cet événement
                 </button>
               </div>
             </div>
@@ -762,15 +786,17 @@ function MarketPanel() {
           {errMsg ? <p className="text-sm text-red-600">{errMsg}</p> : null}
           {saved ? <p className="text-sm text-green-600">✓ Enregistré</p> : null}
           <button type="button" disabled={saving} className="btn btn-safran px-6" onClick={onSave}>
-            {saving ? "Enregistrement..." : "Enregistrer les marchés"}
+            {saving ? "Enregistrement..." : "Enregistrer les événements"}
           </button>
         </div>
       )}
     </div>
   );
 }
+
 const COLLAGE_MIN = 3;
 const COLLAGE_MAX = 8;
+
 function isS3BackedCollageSrc(src: string): boolean {
   const t = src.trim();
   if (!t) return false;
@@ -778,11 +804,10 @@ function isS3BackedCollageSrc(src: string): boolean {
   try {
     const u = new URL(t);
     if (u.hostname.includes("amazonaws.com") && u.pathname.includes("/uploads/")) return true;
-  } catch {
-    /* ignore */
-  }
+  } catch { /* ignore */ }
   return false;
 }
+
 function padCollageSlots(list: CollagePhoto[]): CollagePhoto[] {
   const trimmed = list.slice(0, COLLAGE_MAX);
   const out = [...trimmed];
@@ -809,23 +834,15 @@ function CollagePanel() {
     setPhotos(padCollageSlots(raw));
     setLoading(false);
   }, []);
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
+
   function addPhoto() {
     setPhotos((prev) => {
       if (prev.length >= COLLAGE_MAX) return prev;
-      return [
-        ...prev,
-        {
-          id: `cp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          src: "",
-          alt: "Photo traiteur",
-        },
-      ];
+      return [...prev, { id: `cp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, src: "", alt: "Photo traiteur" }];
     });
   }
-  function updatePhoto(idx: number, patch: Partial<CollagePhoto>) { setPhotos((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)))}
+  function updatePhoto(idx: number, patch: Partial<CollagePhoto>) { setPhotos((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p))); }
   function removePhoto(idx: number) {
     setPhotos((prev) => {
       if (prev.length <= COLLAGE_MIN) return prev;
@@ -858,7 +875,7 @@ function CollagePanel() {
     }
     const notOnS3 = filled.filter((p) => !isS3BackedCollageSrc(p.src));
     if (notOnS3.length > 0) {
-      setNote("Chaque photo doit être envoyée sur S3 via le bouton « Choisir un fichier » (pas d’URL locale type /photo.jpg). Remplacez les images concernées.");
+      setNote("Chaque photo doit être envoyée sur S3 via le bouton « Choisir un fichier » (pas d'URL locale type /photo.jpg). Remplacez les images concernées.");
       return;
     }
     setSaving(true);
@@ -907,7 +924,7 @@ function CollagePanel() {
                   <label className="form-label">Texte alternatif</label>
                   <input
                     className="form-input"
-                    placeholder="Description courte pour l’accessibilité"
+                    placeholder="Description courte pour l'accessibilité"
                     value={photo.alt}
                     onChange={(e) => updatePhoto(idx, { alt: e.target.value })}
                   />
@@ -921,6 +938,7 @@ function CollagePanel() {
                         alt=""
                         width={50}
                         height={50}
+                        unoptimized={photo.src.startsWith("/api/")}
                         className="h-24 w-32 shrink-0 rounded-lg border border-creme-200 object-cover"
                       />
                     ) : (
@@ -932,15 +950,12 @@ function CollagePanel() {
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                       className="form-input min-w-0 flex-1 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-creme-100 file:px-3 file:py-1.5 file:text-ardoise-700"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) uploadForPhoto(idx, f);
-                      }}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadForPhoto(idx, f); }}
                     />
                   </div>
                   {photo.src && !isS3BackedCollageSrc(photo.src) ? (
                     <p className="mt-2 text-xs text-amber-700">
-                      Cette image ne vient pas de S3 : choisissez un fichier pour l’envoyer sur le bucket.
+                      Cette image ne vient pas de S3 : choisissez un fichier pour l&apos;envoyer sur le bucket.
                     </p>
                   ) : null}
                 </div>
@@ -971,15 +986,7 @@ function CollagePanel() {
         </div>
       )}
       {note ? (
-        <p
-          className={`text-sm ${
-            /enregistré|uploadée/i.test(note)
-              ? "text-green-700"
-              : /erreur|HTTP|Il faut/i.test(note)
-                ? "text-red-600"
-                : "text-ardoise-700"
-          }`}
-        >
+        <p className={`text-sm ${/enregistré|uploadée/i.test(note) ? "text-green-700" : /erreur|HTTP|Il faut/i.test(note) ? "text-red-600" : "text-ardoise-700"}`}>
           {note}
         </p>
       ) : null}
@@ -1007,7 +1014,7 @@ export default function AdminPage() {
       </div>
     );
   }
-  if (!auth) { return <LoginForm onSuccess={() => setAuth(true)} />;}
+  if (!auth) { return <LoginForm onSuccess={() => setAuth(true)} />; }
   return (
     <div>
       <header className="sticky top-0 z-30 border-b border-creme-200 bg-white">
@@ -1016,10 +1023,7 @@ export default function AdminPage() {
           <button
             type="button"
             className="btn btn-ghost px-4 py-2 text-sm"
-            onClick={() => {
-              localStorage.removeItem("admin_auth");
-              window.location.reload();
-            }}
+            onClick={() => { localStorage.removeItem("admin_auth"); window.location.reload(); }}
           >
             Déconnexion
           </button>
@@ -1031,7 +1035,7 @@ export default function AdminPage() {
             [
               ["quotes", "Devis"],
               ["menu", "Menu"],
-              ["market", "Marché"],
+              ["market", "Événements"],
               ["collage", "Photocollage"],
             ] as const
           ).map(([id, label]) => (
@@ -1051,7 +1055,7 @@ export default function AdminPage() {
         </div>
         {tab === "quotes" ? <QuotesPanel /> : null}
         {tab === "menu" ? <MenuPanel /> : null}
-        {tab === "market" ? <MarketPanel /> : null}
+        {tab === "market" ? <EventsPanel /> : null}
         {tab === "collage" ? <CollagePanel /> : null}
       </div>
     </div>

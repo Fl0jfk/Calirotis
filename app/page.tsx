@@ -74,15 +74,15 @@ export default function HomePage() {
         <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-center sm:gap-3">
           <span className="text-lg leading-none sm:text-xl">🛖</span>
           <p className="font-body text-sm font-medium leading-snug">
-            Je serai présente au marché le <strong>{formatMarketDate(visibleMarkets[0].date)}</strong>
-            {visibleMarkets[0].place ? ` à ${visibleMarkets[0].place}` : ""}.
+            Retrouvez-nous le <strong>{formatMarketDate(visibleMarkets[0].date)}</strong>
+            {visibleMarkets[0].place ? ` — ${visibleMarkets[0].place}` : ""}.
           </p>
         </div>
         {visibleMarkets.length > 1 ? (
           <ul className="mt-2 space-y-1 border-t border-white/20 pt-2 text-xs font-medium text-white/90 sm:text-sm">
             {visibleMarkets.slice(1).map((m) => (
               <li key={m.id}>
-                Également le {formatMarketDate(m.date)}
+                Aussi le {formatMarketDate(m.date)}
                 {m.place ? ` — ${m.place}` : ""}
               </li>
             ))}
