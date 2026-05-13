@@ -226,7 +226,7 @@ export default function DevisPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1 pb-16 pt-24">
-        <div className="mx-auto max-w-3xl px-6">
+        <div className="mx-auto min-w-0 max-w-3xl px-6">
           <div className="mb-12 rounded-3xl bg-gradient-to-br from-ardoise-800 via-ardoise-800 to-bordeaux-900 px-6 py-10 text-center shadow-lg">
             <span className="section-label mb-3 block text-bordeaux-300">Gratuit & sans engagement</span>
             <h1 className="mb-4 font-display text-4xl text-white md:text-5xl">Votre devis 🍽️</h1>
@@ -244,13 +244,13 @@ export default function DevisPage() {
           ) : (
             <form
               onSubmit={onSubmit}
-              className="devis-form space-y-8 overflow-x-hidden rounded-3xl bg-white p-6 shadow-lg max-sm:p-5 max-sm:[&_.form-input]:text-base max-sm:[&_.form-input]:leading-normal"
+              className="devis-form min-w-0 space-y-8 overflow-x-hidden rounded-3xl bg-white p-6 shadow-lg max-sm:p-5 max-sm:[&_.form-input]:text-base max-sm:[&_.form-input]:leading-normal"
             >
-              <fieldset className="space-y-5">
+              <fieldset className="min-w-0 space-y-5">
                 <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">
                   Vos coordonnées
                 </legend>
-                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <div className="min-w-0">
                     <label className="form-label">Nom *</label>
                     <input
@@ -272,7 +272,7 @@ export default function DevisPage() {
                     />
                   </div>
                 </div>
-                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <div className="min-w-0">
                     <label className="form-label">Téléphone *</label>
                     <input
@@ -299,19 +299,19 @@ export default function DevisPage() {
                 </div>
               </fieldset>
               <hr className="border-creme-200" />
-              <fieldset className="space-y-5">
+              <fieldset className="min-w-0 space-y-5">
                 <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">Votre événement</legend>
-                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="min-w-0 max-w-full">
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                  <div className="min-w-0 overflow-hidden">
                     <label className="form-label">Date de l&apos;événement</label>
                     <input
-                      className="form-input box-border block w-full min-w-0 max-w-full"
+                      className="form-input devis-date-input box-border block w-full min-w-0 max-w-full"
                       type="date"
                       value={eventDate}
                       onChange={(e) => setEventDate(e.target.value)}
                     />
                   </div>
-                  <div className="min-w-0 max-w-full">
+                  <div className="min-w-0 overflow-hidden">
                     <label className="form-label">Nombre de personnes *</label>
                     <input
                       className="form-input box-border block w-full min-w-0 max-w-full"

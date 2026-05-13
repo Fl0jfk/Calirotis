@@ -616,3 +616,20 @@ div[mapboxgl-children] {
     max-width: 260px;
   }
 }
+
+/* Page devis : le champ date a une largeur min intrinsèque (Chrome / Safari) — forcer le resserrement dans la grille */
+.devis-form .devis-date-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.devis-form .devis-date-input::-webkit-datetime-edit-fields-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.devis-form .devis-date-input::-webkit-datetime-edit {
+  padding: 0;
+  min-width: 0;
+}
