@@ -244,7 +244,7 @@ export default function DevisPage() {
           ) : (
             <form
               onSubmit={onSubmit}
-              className="devis-form min-w-0 space-y-8 overflow-x-hidden rounded-3xl bg-white p-6 shadow-lg max-sm:p-5 max-sm:[&_.form-input]:text-base max-sm:[&_.form-input]:leading-normal"
+              className="devis-form min-w-0 space-y-8 rounded-3xl bg-white p-6 shadow-lg max-sm:p-5 max-sm:[&_.form-input]:text-base max-sm:[&_.form-input]:leading-normal"
             >
               <fieldset className="min-w-0 space-y-5">
                 <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">
@@ -301,8 +301,8 @@ export default function DevisPage() {
               <hr className="border-creme-200" />
               <fieldset className="min-w-0 space-y-5">
                 <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">Votre événement</legend>
-                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                  <div className="min-w-0 overflow-hidden">
+                <div className="min-w-0 space-y-5">
+                  <div className="w-full min-w-0 [contain:inline-size]">
                     <label className="form-label">Date de l&apos;événement</label>
                     <input
                       className="form-input devis-date-input box-border block w-full min-w-0 max-w-full"
@@ -311,7 +311,7 @@ export default function DevisPage() {
                       onChange={(e) => setEventDate(e.target.value)}
                     />
                   </div>
-                  <div className="min-w-0 overflow-hidden">
+                  <div className="w-full min-w-0">
                     <label className="form-label">Nombre de personnes *</label>
                     <input
                       className="form-input box-border block w-full min-w-0 max-w-full"

@@ -617,19 +617,28 @@ div[mapboxgl-children] {
   }
 }
 
-/* Page devis : le champ date a une largeur min intrinsèque (Chrome / Safari) — forcer le resserrement dans la grille */
+/* Page devis : champ date natif — pleine largeur du bloc parent (évite demi-colonne trop étroite) */
 .devis-form .devis-date-input {
+  display: block;
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .devis-form .devis-date-input::-webkit-datetime-edit-fields-wrapper {
+  width: 100%;
   min-width: 0;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 .devis-form .devis-date-input::-webkit-datetime-edit {
   padding: 0;
   min-width: 0;
+}
+
+.devis-form .devis-date-input::-webkit-calendar-picker-indicator {
+  margin-inline-start: auto;
+  cursor: pointer;
 }
