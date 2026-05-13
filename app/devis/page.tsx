@@ -280,7 +280,6 @@ export default function DevisPage() {
                       type="tel"
                       value={phone}
                       required
-
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="06 00 00 00 00"
                     />
@@ -299,10 +298,10 @@ export default function DevisPage() {
                 </div>
               </fieldset>
               <hr className="border-creme-200" />
-              <fieldset className="min-w-0 space-y-5">
+              <fieldset className="min-w-0 space-y-5 w-full">
                 <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">Votre événement</legend>
-                <div className="min-w-0 space-y-5">
-                  <div className="w-full min-w-0 [contain:inline-size]">
+                <div className="min-w-0 space-y-5 w-full">
+                  <div className="w-full min-w-0">
                     <label className="form-label">Date de l&apos;événement</label>
                     <input
                       className="form-input box-border block w-full min-w-0 max-w-full"
