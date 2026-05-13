@@ -305,7 +305,7 @@ export default function DevisPage() {
                   <div className="w-full min-w-0 [contain:inline-size]">
                     <label className="form-label">Date de l&apos;événement</label>
                     <input
-                      className="form-input devis-date-input box-border block w-full min-w-0 max-w-full"
+                      className="form-input box-border block w-full min-w-0 max-w-full"
                       type="date"
                       value={eventDate}
                       onChange={(e) => setEventDate(e.target.value)}

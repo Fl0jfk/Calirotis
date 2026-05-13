@@ -610,35 +610,8 @@ div[mapboxgl-children] {
     height: 60px;
   }
   .broche-label { font-size: 10px; top: 280px; }
-  /* Ligne « terre » : plus courte que le desktop (380px) pour rester dans la scène sur mobile */
   .broche-ground {
     width: 68%;
     max-width: 260px;
   }
-}
-
-/* Page devis : champ date natif — pleine largeur du bloc parent (évite demi-colonne trop étroite) */
-.devis-form .devis-date-input {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.devis-form .devis-date-input::-webkit-datetime-edit-fields-wrapper {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.devis-form .devis-date-input::-webkit-datetime-edit {
-  padding: 0;
-  min-width: 0;
-}
-
-.devis-form .devis-date-input::-webkit-calendar-picker-indicator {
-  margin-inline-start: auto;
-  cursor: pointer;
 }
