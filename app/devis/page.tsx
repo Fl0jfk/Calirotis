@@ -242,26 +242,29 @@ export default function DevisPage() {
               <p className="font-body text-green-700">On vous recontacte dans les plus brefs délais.</p>
             </div>
           ) : (
-            <form onSubmit={onSubmit} className="space-y-8 rounded-3xl bg-white p-8 shadow-lg">
+            <form
+              onSubmit={onSubmit}
+              className="devis-form space-y-8 overflow-x-hidden rounded-3xl bg-white p-6 shadow-lg max-sm:p-5 max-sm:[&_.form-input]:text-base max-sm:[&_.form-input]:leading-normal"
+            >
               <fieldset className="space-y-5">
                 <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">
                   Vos coordonnées
                 </legend>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="min-w-0">
                     <label className="form-label">Nom *</label>
                     <input
-                      className="form-input"
+                      className="form-input box-border block w-full min-w-0 max-w-full"
                       required
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Dupont"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="form-label">Prénom *</label>
                     <input
-                      className="form-input"
+                      className="form-input box-border block w-full min-w-0 max-w-full"
                       required
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
@@ -269,11 +272,11 @@ export default function DevisPage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="min-w-0">
                     <label className="form-label">Téléphone *</label>
                     <input
-                      className="form-input"
+                      className="form-input box-border block w-full min-w-0 max-w-full"
                       type="tel"
                       value={phone}
                       required
@@ -282,10 +285,10 @@ export default function DevisPage() {
                       placeholder="06 00 00 00 00"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="form-label">Email *</label>
                     <input
-                      className="form-input"
+                      className="form-input box-border block w-full min-w-0 max-w-full"
                       type="email"
                       required
                       value={email}
@@ -298,20 +301,20 @@ export default function DevisPage() {
               <hr className="border-creme-200" />
               <fieldset className="space-y-5">
                 <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">Votre événement</legend>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="min-w-0 max-w-full">
                     <label className="form-label">Date de l&apos;événement</label>
                     <input
-                      className="form-input"
+                      className="form-input box-border block w-full min-w-0 max-w-full"
                       type="date"
                       value={eventDate}
                       onChange={(e) => setEventDate(e.target.value)}
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0 max-w-full">
                     <label className="form-label">Nombre de personnes *</label>
                     <input
-                      className="form-input"
+                      className="form-input box-border block w-full min-w-0 max-w-full"
                       type="number"
                       min={1}
                       required
@@ -323,7 +326,7 @@ export default function DevisPage() {
                 <div>
                   <label className="form-label">Lieu de l&apos;événement</label>
                   <input
-                    className="form-input"
+                    className="form-input box-border block w-full min-w-0 max-w-full"
                     value={eventPlace}
                     onChange={(e) => setEventPlace(e.target.value)}
                     placeholder="Salle des fêtes, Paris 75001..."
@@ -408,7 +411,7 @@ export default function DevisPage() {
               <div>
                 <label className="form-label">Message complémentaire</label>
                 <textarea
-                  className="form-input min-h-[100px] resize-y"
+                  className="form-input box-border block w-full min-w-0 max-w-full min-h-[100px] resize-y"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Allergies, demandes particulières, style de service..."

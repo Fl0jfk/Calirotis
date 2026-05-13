@@ -610,4 +610,9 @@ div[mapboxgl-children] {
     height: 60px;
   }
   .broche-label { font-size: 10px; top: 280px; }
+  /* Ligne « terre » : plus courte que le desktop (380px) pour rester dans la scène sur mobile */
+  .broche-ground {
+    width: 68%;
+    max-width: 260px;
+  }
 }
