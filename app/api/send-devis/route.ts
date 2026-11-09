@@ -58,13 +58,12 @@ async function signedPut(st: StorageContext, key: string, contentType: string) {
 async function loadQuotes(st: StorageContext): Promise<QuotesData> {
   const url = await signedGet(st, KEY);
   const res = await fetch(url, { cache: "no-store" });
-  if (res.status === 404 || !res.ok) return { quotes: [] };
-  try {
-    const data = (await res.json()) as QuotesData;
-    return Array.isArray(data.quotes) ? data : { quotes: [] };
-  } catch {
-    return { quotes: [] };
-  }
+  if (res.status === 404) return { quotes: [] };
+  // Toute autre erreur : on refuse d'écrire, sinon on écraserait tous les devis existants.
+  if (!res.ok) throw new Error(`Lecture des devis impossible (${res.status})`);
+  const data = (await res.json()) as QuotesData;
+  if (!Array.isArray(data.quotes)) throw new Error("Fichier des devis illisible");
+  return data;
 }
 
 async function saveQuotes(st: StorageContext, data: QuotesData): Promise<void> {
@@ -180,6 +179,12 @@ function createMailer() {
   };
 }
 
+/** Destinataire(s) des nouvelles demandes. Par défaut le compte SMTP lui-même. */
+function adminRecipients(fallback: string): string {
+  const raw = (process.env.QUOTE_RECIPIENTS || process.env.ADMIN_EMAIL || "").trim();
+  return raw || fallback;
+}
+
 async function sendQuoteEmails(quote: QuoteRequest) {
   const { user, transporter } = createMailer();
   const customerName = `${quote.first_name} ${quote.last_name}`.trim();
@@ -238,10 +243,10 @@ async function sendQuoteEmails(quote: QuoteRequest) {
     messageHtml
   });
 
-  await Promise.all([
+  const [adminResult, customerResult] = await Promise.allSettled([
     transporter.sendMail({
       from: `"Calirotis" <${user}>`,
-      to: user,
+      to: adminRecipients(user),
       replyTo: quote.email,
       subject: `Nouvelle demande de devis - ${customerName}`,
       text: `Une nouvelle demande de devis a été reçue.\n\n${summaryText}`,
@@ -261,46 +266,156 @@ async function sendQuoteEmails(quote: QuoteRequest) {
       html: customerHtml,
     }),
   ]);
+  if (customerResult.status === "rejected") {
+    console.error("[send-devis] e-mail de confirmation client non envoyé", customerResult.reason);
+  }
+  if (adminResult.status === "rejected") {
+    console.error("[send-devis] e-mail admin non envoyé", adminResult.reason);
+    throw adminResult.reason;
+  }
 }
 
+// ---------- Anti-bot ----------
+
+const MIN_FILL_MS = 4000; // un humain met plus de 4 s à remplir le formulaire
+const MAX_FORM_AGE_MS = 24 * 60 * 60 * 1000;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATE_MAX = 3; // 3 demandes / 10 min / IP
+const hits = new Map<string, number[]>();
+
+function clientIp(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  return (fwd?.split(",")[0] || req.headers.get("x-real-ip") || "unknown").trim();
+}
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (hits.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  recent.push(now);
+  hits.set(ip, recent);
+  if (hits.size > 5000) {
+    hits.forEach((v, k) => {
+      if (!v.some((t) => now - t < RATE_WINDOW_MS)) hits.delete(k);
+    });
+  }
+  return recent.length > RATE_MAX;
+}
+
+function looksLikeSpam(texts: string[]): boolean {
+  const all = texts.join(" ");
+  const links = all.match(/https?:\/\/|www\./gi)?.length || 0;
+  if (links > 2) return true;
+  if (/<a\s|\[url=|\[link=/i.test(all)) return true;
+  return false;
+}
+
+// ---------- Validation ----------
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function str(v: unknown, max: number): string {
+  return typeof v === "string" ? v.replace(/[\r\n]+/g, " ").trim().slice(0, max) : "";
+}
+
+function strList(v: unknown): string[] {
+  return Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim().slice(0, 200)).slice(0, 50)
+    : [];
+}
+
+function fail(error: string, status = 400) {
+  return NextResponse.json({ error }, { status });
+}
+
+type IncomingBody = NewQuote & { website?: unknown; form_started_at?: unknown };
+
 export async function POST(req: Request) {
-  const st = getStorage();
-  if (!st) {
-    return NextResponse.json(storageConfigErrorJson(), { status: 503 });
+  let body: IncomingBody;
+  try {
+    body = (await req.json()) as IncomingBody;
+  } catch {
+    return fail("Requête invalide");
+  }
+  if (!body || typeof body !== "object") return fail("Requête invalide");
+
+  // Pot de miel : champ invisible pour les humains. On répond "ok" pour ne pas renseigner le bot.
+  if (typeof body.website === "string" && body.website.trim() !== "") {
+    console.warn("[send-devis] bot bloqué (pot de miel)");
+    return NextResponse.json({ ok: true });
+  }
+  const startedAt = Number(body.form_started_at);
+  const elapsed = Date.now() - startedAt;
+  if (!Number.isFinite(startedAt) || elapsed < MIN_FILL_MS || elapsed > MAX_FORM_AGE_MS) {
+    console.warn("[send-devis] bot bloqué (délai de remplissage)", elapsed);
+    return NextResponse.json({ ok: true });
+  }
+  if (rateLimited(clientIp(req))) {
+    return fail("Trop de demandes envoyées. Merci de réessayer dans quelques minutes ou de nous appeler.", 429);
   }
 
-  const body = (await req.json()) as NewQuote;
-  if (!body.last_name || !body.first_name || !body.email || !body.main_dish) {
-    return NextResponse.json({ error: "Champs requis manquants" }, { status: 400 });
+  const lastName = str(body.last_name, 100);
+  const firstName = str(body.first_name, 100);
+  const email = str(body.email, 200);
+  const phone = str(body.phone, 30);
+  const message = typeof body.message === "string" ? body.message.trim().slice(0, 3000) : "";
+  const people = Math.floor(Number(body.number_of_people || 0));
+
+  if (!lastName || !firstName || !email || !phone) return fail("Merci de remplir nom, prénom, téléphone et e-mail.");
+  if (!EMAIL_RE.test(email)) return fail("Adresse e-mail invalide.");
+  if ((phone.match(/\d/g) || []).length < 8) return fail("Numéro de téléphone invalide.");
+  if (!Number.isFinite(people) || people < 1 || people > 10000) return fail("Nombre de personnes invalide.");
+  if (looksLikeSpam([lastName, firstName, message, str(body.event_place, 300)])) {
+    console.warn("[send-devis] bot bloqué (contenu suspect)");
+    return NextResponse.json({ ok: true });
   }
 
-  const quotesData = await loadQuotes(st);
   const newQuote: QuoteRequest = {
     id: quoteId(),
-    last_name: body.last_name.trim(),
-    first_name: body.first_name.trim(),
-    phone: body.phone?.trim() || "",
-    email: body.email.trim(),
-    event_date: body.event_date?.trim() || "",
-    event_place: body.event_place?.trim() || "",
-    number_of_people: Number(body.number_of_people || 0),
-    starters: body.starters || [],
-    starters_labels: Array.isArray(body.starters_labels)
-      ? body.starters_labels.filter((x): x is string => typeof x === "string" && x.trim().length > 0)
-      : [],
-    main_dish: body.main_dish,
-    main_dish_label:
-      typeof body.main_dish_label === "string" && body.main_dish_label.trim()
-        ? body.main_dish_label.trim()
-        : "",
-    desserts: body.desserts || [],
-    desserts_labels: Array.isArray(body.desserts_labels)
-      ? body.desserts_labels.filter((x): x is string => typeof x === "string" && x.trim().length > 0)
-      : [],
-    message: body.message?.trim() || null,
+    last_name: lastName,
+    first_name: firstName,
+    phone,
+    email,
+    event_date: str(body.event_date, 30),
+    event_place: str(body.event_place, 300),
+    number_of_people: people,
+    starters: strList(body.starters),
+    starters_labels: strList(body.starters_labels),
+    // Le plat principal peut être vide si la carte n'a pas pu être chargée (le client le décrit dans le message).
+    main_dish: str(body.main_dish, 200),
+    main_dish_label: str(body.main_dish_label, 200),
+    desserts: strList(body.desserts),
+    desserts_labels: strList(body.desserts_labels),
+    message: message || null,
     created_at: new Date().toISOString(),
   };
-  await saveQuotes(st, { quotes: [newQuote, ...(quotesData.quotes || [])] });
-  await sendQuoteEmails(newQuote);
-  return NextResponse.json({ ok: true, id: newQuote.id });
+
+  // On tente l'enregistrement ET l'e-mail séparément : si l'un des deux marche, la demande n'est pas perdue.
+  let saved = false;
+  let mailed = false;
+  const st = getStorage();
+  if (st) {
+    try {
+      const quotesData = await loadQuotes(st);
+      await saveQuotes(st, { quotes: [newQuote, ...quotesData.quotes] });
+      saved = true;
+    } catch (e) {
+      console.error("[send-devis] enregistrement du devis échoué", e);
+    }
+  } else {
+    console.error("[send-devis] stockage non configuré", storageConfigErrorJson().debug);
+  }
+  try {
+    await sendQuoteEmails(newQuote);
+    mailed = true;
+  } catch (e) {
+    console.error("[send-devis] envoi e-mail échoué", e);
+  }
+
+  if (!saved && !mailed) {
+    return fail(
+      "Votre demande n'a pas pu être envoyée suite à un problème technique. Merci de nous appeler au 06.99.51.22.90.",
+      500,
+    );
+  }
+  return NextResponse.json({ ok: true, id: newQuote.id, saved, mailed });
 }

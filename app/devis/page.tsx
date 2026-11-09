@@ -55,8 +55,16 @@ async function sendDevis(body: Record<string, unknown>) {
     body: JSON.stringify(body),
   });
   if (!r.ok) {
-    const text = await r.text();
-    throw new Error(text || `Erreur HTTP ${r.status}`);
+    let msg = "";
+    try {
+      const j = (await r.json()) as { error?: string };
+      msg = j.error || "";
+    } catch {
+      /* réponse non JSON */
+    }
+    throw new Error(
+      msg || "Votre demande n'a pas pu être envoyée. Merci de réessayer ou de nous appeler au 06.99.51.22.90.",
+    );
   }
 }
 
@@ -159,6 +167,9 @@ export default function DevisPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Anti-bot : champ piège invisible + heure d'ouverture du formulaire.
+  const [website, setWebsite] = useState("");
+  const [formStartedAt] = useState(() => Date.now());
 
   useEffect(() => {
     let ok = true;
@@ -184,7 +195,8 @@ export default function DevisPage() {
       setErrorMsg("Veuillez indiquer un nombre de personnes valide.");
       return;
     }
-    if (!mainDish) {
+    const hasMainDishes = (data?.items ?? []).some((i) => normalizeMenuCategory(i.category) === "main_dish");
+    if (hasMainDishes && !mainDish) {
       setErrorMsg("Veuillez choisir un plat principal.");
       return;
     }
@@ -211,7 +223,7 @@ export default function DevisPage() {
         desserts_labels: dessertsLabels,
         message: message.trim() ? message : undefined,
       };
-      await sendDevis(payload);
+      await sendDevis({ ...payload, website, form_started_at: formStartedAt });
       setSuccess(true);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Erreur d’envoi");
@@ -415,6 +427,19 @@ export default function DevisPage() {
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Allergies, demandes particulières, style de service..."
                 />
+              </div>
+              <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+                <label>
+                  Ne pas remplir
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </label>
               </div>
               {errorMsg ? (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
