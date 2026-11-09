@@ -1,13 +1,8 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
+import { isAdminAuthorized, unauthorizedResponse } from "../../../../lib/admin-auth";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
-
-function isAdminAuthorized(req: Request): boolean {
-  const expected = process.env.ADMIN_API_KEY || "";
-  if (!expected) return true;
-  return req.headers.get("x-admin-key") === expected;
-}
 
 async function signedPut(st: StorageContext, key: string, contentType: string) {
   return getSignedUrl(
@@ -29,8 +24,8 @@ function devLog(...args: unknown[]) {
 export async function POST(req: Request) {
   devLog("POST reçu");
   if (!isAdminAuthorized(req)) {
-    console.warn(LOG, "refus: clé admin manquante ou incorrecte (header x-admin-key)");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.warn(LOG, "refus: session admin absente, expirée ou invalide");
+    return unauthorizedResponse();
   }
   devLog("auth admin OK");
   const st = getStorage();

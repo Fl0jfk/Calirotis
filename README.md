@@ -2,6 +2,47 @@ Calirotis.fr
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Espace admin : authentification
+
+`/admin` est protégé par un mot de passe vérifié côté serveur. Après un `POST /api/admin/login` réussi, le serveur pose un cookie `calirotis_admin` :
+
+- `HttpOnly`, `Secure`, `SameSite=Strict`, limité au chemin `/api/admin` ;
+- signé en HMAC-SHA256 avec `ADMIN_SESSION_SECRET` ;
+- valable 12 heures, puis il faut se reconnecter.
+
+Toutes les routes `/api/admin/*` (quotes, menu, market, reviews, upload-photo, collage) exigent ce cookie. **Si les variables ci-dessous manquent, tout est refusé** (401 sur les routes, 503 sur la connexion). `GET /api/admin/session` indique si la session est valide, `DELETE /api/admin/session` déconnecte.
+
+### Variables d'environnement à définir (AWS Amplify)
+
+Dans la console Amplify : *App settings → Environment variables* (ou *Hosting → Secrets* pour les valeurs sensibles).
+
+| Variable | Rôle |
+| --- | --- |
+| `ADMIN_PASSWORD` | Mot de passe de l'espace admin. |
+| `ADMIN_SESSION_SECRET` | Secret de signature des sessions, **32 caractères minimum**. Générer avec `openssl rand -base64 48`. Le changer déconnecte toutes les sessions. |
+
+À **supprimer** de la configuration Amplify (elles ne sont plus lues, et tout `NEXT_PUBLIC_*` est intégré au JavaScript envoyé au navigateur) :
+
+- `NEXT_PUBLIC_ADMIN_API_KEY`
+- `NEXT_PUBLIC_ADMIN_PASSWORD`
+- `ADMIN_API_KEY` (remplacée par la session)
+
+Ces anciennes valeurs ont pu être lues par n'importe quel visiteur : ne pas réutiliser l'ancien mot de passe.
+
+**Important sur Amplify (Next.js SSR)** : les variables de la console sont disponibles pendant le build, mais pas forcément pour les routes API à l'exécution. Si la connexion répond « Connexion admin non configurée » (503), les rendre visibles au serveur en les écrivant dans `.env.production` pendant le build, dans `amplify.yml` (ou la *Build specification* de la console), avant `npm run build` :
+
+```yaml
+frontend:
+  phases:
+    build:
+      commands:
+        - echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> .env.production
+        - echo "ADMIN_SESSION_SECRET=$ADMIN_SESSION_SECRET" >> .env.production
+        - npm run build
+```
+
+En local, mettre les deux variables dans `.env.local` (ignoré par git).
+
 ## Getting Started
 
 First, run the development server:

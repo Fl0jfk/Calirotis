@@ -41,8 +41,6 @@ type QuoteRequest = {
 };
 type QuotesData = { quotes: QuoteRequest[] };
 
-const ADMIN_API_KEY = process.env.NEXT_PUBLIC_ADMIN_API_KEY || "";
-
 const DEBUG_CLIENT_UPLOAD =
   process.env.NEXT_PUBLIC_DEBUG_UPLOAD === "1" || process.env.NODE_ENV === "development";
 
@@ -58,9 +56,21 @@ function menuJsonUrlBusted(generation: number) {
   return `${base}${sep}cb=${generation}`;
 }
 
+// L'authentification passe par le cookie httpOnly posé par /api/admin/login
+// (envoyé automatiquement par le navigateur, même origine). Aucun secret côté client.
 function adminHeaders(): HeadersInit {
-  if (!ADMIN_API_KEY) return {};
-  return { "x-admin-key": ADMIN_API_KEY };
+  return {};
+}
+
+async function fetchAdminSession(): Promise<boolean> {
+  try {
+    const r = await fetch("/api/admin/session", { cache: "no-store" });
+    if (!r.ok) return false;
+    const j = (await r.json()) as { authenticated?: boolean };
+    return j.authenticated === true;
+  } catch {
+    return false;
+  }
 }
 
 function normalizeMenuCategory(raw: string): "starter" | "main_dish" | "dessert" {
@@ -159,7 +169,6 @@ async function uploadMenuPhoto(file: File) {
     name: file.name,
     size: file.size,
     type: file.type || "(vide — risque 400 Image requise côté serveur)",
-    adminKeyHeader: Boolean(ADMIN_API_KEY),
   });
   if (!contentType.startsWith("image/")) throw new Error("Le fichier doit être une image.");
   const fd = new FormData();
@@ -259,7 +268,6 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         setError(j.error || "Mot de passe incorrect");
         return;
       }
-      localStorage.setItem("admin_auth", "1");
       onSuccess();
     } catch {
       setError("Impossible de joindre le serveur.");
@@ -1193,8 +1201,9 @@ export default function AdminPage() {
   const [auth, setAuth] = useState<boolean | null>(null);
   const [tab, setTab] = useState<"quotes" | "menu" | "market" | "collage" | "reviews">("quotes");
   useEffect(() => {
-    setAuth(localStorage.getItem("admin_auth") === "1");
+    localStorage.removeItem("admin_auth"); // ancien indicateur, plus utilisé
     setTab(initialTab());
+    void fetchAdminSession().then(setAuth);
   }, []);
   useEffect(() => {
     if (auth) localStorage.setItem(TAB_KEY, tab);
@@ -1215,7 +1224,10 @@ export default function AdminPage() {
           <button
             type="button"
             className="btn btn-ghost px-4 py-2 text-sm"
-            onClick={() => { localStorage.removeItem("admin_auth"); window.location.reload(); }}
+            onClick={async () => {
+              await fetch("/api/admin/session", { method: "DELETE" }).catch(() => undefined);
+              window.location.reload();
+            }}
           >
             Déconnexion
           </button>

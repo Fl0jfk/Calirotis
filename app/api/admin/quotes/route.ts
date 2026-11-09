@@ -1,17 +1,12 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
+import { isAdminAuthorized, unauthorizedResponse } from "../../../../lib/admin-auth";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
 
 const KEY = "quotes.json";
 
 type QuotesData = { quotes: unknown[] };
-
-function isAdminAuthorized(req: Request): boolean {
-  const expected = process.env.ADMIN_API_KEY || "";
-  if (!expected) return true;
-  return req.headers.get("x-admin-key") === expected;
-}
 
 async function signedGet(st: StorageContext, key: string) {
   return getSignedUrl(st.s3, new GetObjectCommand({ Bucket: st.bucket, Key: key }), { expiresIn: 60 });
@@ -31,7 +26,7 @@ async function loadQuotes(st: StorageContext): Promise<QuotesData> {
 
 export async function GET(req: Request) {
   if (!isAdminAuthorized(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
   const st = getStorage();
   if (!st) {

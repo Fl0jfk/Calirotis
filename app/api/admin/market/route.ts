@@ -1,6 +1,7 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
+import { isAdminAuthorized, unauthorizedResponse } from "../../../../lib/admin-auth";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
 
 const KEY = "market.json";
@@ -8,12 +9,6 @@ const KEY = "market.json";
 type MarketEntry = { id: string; date: string; place: string };
 type MarketsData = { markets: MarketEntry[] };
 type LegacyMarket = { date?: string | null; place?: string | null; active?: boolean };
-
-function isAdminAuthorized(req: Request): boolean {
-  const expected = process.env.ADMIN_API_KEY || "";
-  if (!expected) return true;
-  return req.headers.get("x-admin-key") === expected;
-}
 
 async function signedGet(st: StorageContext, key: string) {
   return getSignedUrl(st.s3, new GetObjectCommand({ Bucket: st.bucket, Key: key }), { expiresIn: 60 });
@@ -89,7 +84,7 @@ async function saveMarket(st: StorageContext, data: MarketsData): Promise<void> 
 
 export async function POST(req: Request) {
   if (!isAdminAuthorized(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
   const st = getStorage();
   if (!st) {
@@ -103,7 +98,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   if (!isAdminAuthorized(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
   const st = getStorage();
   if (!st) {
