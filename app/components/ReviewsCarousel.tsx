@@ -14,6 +14,9 @@ type Review = {
 
 const DURATION = 7000;
 const PIG_W = 76;
+const HEAD = 0.88; // position du groin dans le dessin du cochon
+const GUTTER = Math.round(PIG_W * HEAD); // place laissée à gauche de la 1re pomme pour le corps du cochon
+const EAT_MS = 1500; // le cochon s'arrête ce temps devant chaque pomme
 const GOOGLE_PAGE = "https://www.google.com/maps?cid=9889569065101112204";
 
 function GoogleLogo({ className = "h-5 w-5" }: { className?: string }) {
@@ -113,6 +116,8 @@ export function ReviewsCarousel() {
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [eating, setEating] = useState(false);
+  const [bitten, setBitten] = useState(false);
 
   const total = reviews.length;
   const indexRef = useRef(0);
@@ -150,6 +155,24 @@ export function ReviewsCarousel() {
   );
 
   useEffect(() => {
+    setEating(false);
+    setBitten(false);
+    if (total === 0) return;
+    if (reducedRef.current) {
+      setBitten(true);
+      return;
+    }
+    const t1 = window.setTimeout(() => setEating(true), 450);
+    const t2 = window.setTimeout(() => setBitten(true), 1000);
+    const t3 = window.setTimeout(() => setEating(false), 1650);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
+  }, [index, total]);
+
+  useEffect(() => {
     if (total === 0) return;
     const el = rootRef.current;
     if (!el) return;
@@ -172,13 +195,16 @@ export function ReviewsCarousel() {
         elapsedRef.current += dt * 1000;
         if (elapsedRef.current >= DURATION) go(indexRef.current + 1);
       }
-      const target = (indexRef.current + elapsedRef.current / DURATION) / total;
+      const e = elapsedRef.current;
+      const eatPause = e < EAT_MS;
+      const p = eatPause ? 0 : (e - EAT_MS) / (DURATION - EAT_MS);
+      const target = (indexRef.current + 0.5 + p) / total;
       const diff = target - x;
       x += diff * Math.min(1, dt * 3.2);
-      if (diff > 0.003) dir = 1;
-      else if (diff < -0.003) dir = -1;
+      // Il ne regarde à gauche que pendant qu'il court réellement en arrière ; à l'arrêt, il fait toujours face à la pomme.
+      dir = diff < -0.008 ? -1 : 1;
 
-      const shouldWalk = auto || Math.abs(diff) > 0.01;
+      const shouldWalk = (auto && !eatPause) || Math.abs(diff) > 0.01;
       if (shouldWalk !== walking) {
         walking = shouldWalk;
         pigRef.current?.classList.toggle("pig-walking", walking);
@@ -186,11 +212,11 @@ export function ReviewsCarousel() {
       const run = Math.abs(diff) > 0.15;
       pigRef.current?.classList.toggle("pig-running", run);
 
-      const left = `calc((100% - ${PIG_W}px) * ${Math.min(1, Math.max(0, x))})`;
-      if (pigRef.current) pigRef.current.style.left = left;
+      const hx = Math.min(1, Math.max(0, x));
+      if (pigRef.current) pigRef.current.style.left = `calc(${hx * 100}% - ${HEAD * PIG_W}px)`;
       if (flipRef.current) flipRef.current.style.transform = `scaleX(${dir})`;
       if (tailRef.current) {
-        tailRef.current.style.left = `clamp(34px, calc((100% - ${PIG_W}px) * ${Math.min(1, Math.max(0, x))} + ${PIG_W / 2}px), calc(100% - 34px))`;
+        tailRef.current.style.left = `clamp(34px, calc(${GUTTER}px + (100% - ${GUTTER}px) * ${hx} - ${0.4 * PIG_W}px), calc(100% - 34px))`;
       }
     };
     raf = requestAnimationFrame(tick);
@@ -275,25 +301,33 @@ export function ReviewsCarousel() {
       </div>
 
       <div className="relative mx-auto mt-5 max-w-3xl sm:mt-7">
-        <div className="relative h-[64px]">
-          <div ref={pigRef} className="pig-walking absolute bottom-[8px]" style={{ left: 0, width: PIG_W }}>
-            <div ref={flipRef} style={{ transformOrigin: "50% 100%" }}>
-              <WalkingPig width={PIG_W} />
-            </div>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 flex h-[10px] items-center border-t-4 border-dashed border-ardoise-400">
-            <div className="absolute inset-x-0 -top-[4px] flex">
-              {reviews.map((r, i) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => go(i)}
-                  aria-label={`Aller à l'avis ${i + 1}`}
-                  className="group flex h-6 flex-1 items-start justify-center"
-                >
-                  <span className={`mt-[3px] block h-2 w-2 rounded-full border-2 border-[#1a1a1a] transition-colors ${i === index ? "bg-bordeaux-700" : "bg-white group-hover:bg-safran-400"}`} />
-                </button>
-              ))}
+        <div className="relative h-[80px]">
+          <div className="grass-strip absolute inset-x-0 bottom-0" aria-hidden />
+          <div className="absolute inset-0" style={{ paddingLeft: GUTTER }}>
+            <div className="relative h-full">
+              <div ref={pigRef} className="pig-walking absolute bottom-[6px] z-10" style={{ left: 0, width: PIG_W }}>
+                <div ref={flipRef} style={{ transformOrigin: "88% 100%" }}>
+                  <div className={eating ? "pig-eat" : ""}>
+                    <WalkingPig width={PIG_W} />
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-x-0 bottom-[10px] z-[5] flex">
+                {reviews.map((r, i) => {
+                  const eaten = i < index || (i === index && bitten);
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => go(i)}
+                      aria-label={`Aller à l'avis ${i + 1}`}
+                      className="group flex h-8 min-w-0 flex-1 items-end justify-center"
+                    >
+                      {eaten ? <span className="apple-core" /> : <span className={`apple ${i === index ? "apple-active" : ""}`} />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -314,6 +348,9 @@ export function ReviewsCarousel() {
     </div>
   );
 }
+
+
+
 
 
 
