@@ -145,7 +145,7 @@ export default function HomePage() {
             </RotisserieScene>
           </div>
           <div className="mt-6 pb-4 md:mt-8">
-            <p className="mb-3 font-hand text-2xl text-ardoise-300 pt-4">Rôtisserie événementielle</p>
+            <h1 className="mb-3 px-4 font-hand text-2xl text-ardoise-300 pt-4">Rôtisserie événementielle en Normandie et Île-de-France</h1>
             <p className="mb-8 max-w-2xl font-body text-lg leading-relaxed text-ardoise-300 mx-auto px-6">
               Cochon de lait, méchoui et barbecue géant pour vos événements privés ou pros.
               Une cuisine conviviale, généreuse et cuite lentement, avec des produits frais et
@@ -403,7 +403,7 @@ export default function HomePage() {
               <div className="relative h-64 w-full overflow-hidden rounded-2xl shadow-2xl">
                 <Image
                   src={mariageImg}
-                  alt="Mariage et baptême"
+                  alt="Cochons illustrés en tenue de mariée et de marié : rôtisserie pour mariage et baptême"
                   fill
                   className="object-contain transition-transform duration-500 sm:scale-140 sm:group-hover:scale-145 scale-100 group-hover:scale-105"
                   sizes="(max-width: 640px) 100vw, 33vw"
@@ -419,7 +419,7 @@ export default function HomePage() {
               <div className="relative h-64 w-full overflow-hidden rounded-2xl shadow-2xl">
                 <Image
                   src={feteImg}
-                  alt="Fêtes et famille"
+                  alt="Cochon illustré en bonnet de fête : cochon de lait à la broche pour fêtes de famille"
                   fill
                   className="object-contain transition-transform duration-500 group-hover:scale-105"
                   sizes="(max-width: 640px) 100vw, 33vw"
@@ -435,7 +435,7 @@ export default function HomePage() {
               <div className="relative h-64 w-full overflow-hidden rounded-2xl shadow-2xl">
                 <Image
                   src={businessImg}
-                  alt="Événements d'entreprise"
+                  alt="Cochons illustrés au bureau : rôtisserie pour événements d'entreprise"
                   fill
                   className="object-contain transition-transform duration-500 group-hover:scale-105"
                   sizes="(max-width: 640px) 100vw, 33vw"
@@ -460,3 +460,4 @@ export default function HomePage() {
     </div>
   );
 }
+

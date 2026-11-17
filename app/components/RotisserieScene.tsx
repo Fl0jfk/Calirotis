@@ -39,9 +39,14 @@ export function RotisserieScene({ children }: { children?: ReactNode }) {
         aria-hidden
         className={`broche-poster ${ready ? "broche-poster-hidden" : ""}`}
         draggable={false}
+        width={1000}
+        height={566}
+        fetchPriority="high"
+        decoding="async"
       />
       <div ref={hostRef} className="broche-canvas" />
       {children}
     </div>
   );
 }
+
