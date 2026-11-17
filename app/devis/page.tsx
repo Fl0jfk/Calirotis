@@ -34,7 +34,10 @@ type QuotePayload = {
   desserts_labels: string[];
   message?: string;
 };
-type SendResult = { ok?: boolean; saved?: boolean; mailed?: boolean; customerMailed?: boolean };
+type SendResult = { ok?: boolean; saved?: boolean; mailed?: boolean; customerMailed?: boolean; duplicate?: boolean; updated?: boolean };
+type Outcome = "new" | "duplicate" | "updated";
+const SENT_KEY = "calirotis_devis_sent";
+const SENT_DAYS = 7;
 
 const PHONE_DISPLAY = "06.02.20.85.40";
 const PHONE_TEL = "0602208540";
@@ -105,11 +108,9 @@ function StepCard({ n, title, hint, children }: { n: number; title: string; hint
   );
 }
 
-function ProgressTrack({ fraction, remaining }: { fraction: number; remaining: number }) {
+function ProgressTrack({ fraction, missing }: { fraction: number; missing: string[] }) {
   const [walking, setWalking] = useState(false);
-  const [stuck, setStuck] = useState(false);
   const prev = useRef(fraction);
-  const anchor = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (fraction === prev.current) return;
@@ -119,52 +120,32 @@ function ProgressTrack({ fraction, remaining }: { fraction: number; remaining: n
     return () => window.clearTimeout(id);
   }, [fraction]);
 
-  // Le site masque le défilement horizontal sur body, ce qui neutralise "sticky" : on affiche une copie fixe
-  // dès que la barre d'origine sort de l'écran par le haut.
-  useEffect(() => {
-    const el = anchor.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => setStuck(!e.isIntersecting && e.boundingClientRect.top < 0),
-      { rootMargin: "-70px 0px 0px 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   const ready = fraction >= 1;
-  const content = (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-1 flex items-center justify-between font-body text-xs font-semibold text-ardoise-700 sm:text-sm">
-        <span>{ready ? "C'est prêt, il ne reste qu'à envoyer !" : `Plus que ${remaining} champ${remaining > 1 ? "s" : ""} à remplir`}</span>
-        <span className="font-display text-base text-bordeaux-700">{Math.round(fraction * 100)} %</span>
-      </div>
-      <div className="relative h-[46px]">
-        <div
-          className={`absolute bottom-[6px] z-10 transition-[left] duration-700 ease-out ${walking ? "pig-walking" : ""} ${ready && !walking ? "pig-ready" : ""}`}
-          style={{ left: `calc((100% - 56px) * ${fraction})`, width: 56 }}
-        >
-          <WalkingPig width={56} />
+  return (
+    <div className="fixed inset-x-0 top-16 z-30 border-b-2 border-[#1a1a1a]/20 bg-creme-50/95 px-4 pb-1.5 pt-2 backdrop-blur md:top-20 md:px-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-0.5 flex items-center justify-between gap-3 font-body text-[11px] font-semibold leading-tight text-ardoise-700 sm:text-sm">
+          <span className="min-w-0 truncate">
+            {ready ? "C'est prêt, il ne reste qu'à envoyer !" : `À remplir : ${missing.join(", ")}`}
+          </span>
+          <span className="shrink-0 font-display text-base text-bordeaux-700">{Math.round(fraction * 100)} %</span>
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-[6px] overflow-hidden rounded-full border-2 border-[#1a1a1a] bg-white">
-          <div className="h-full rounded-full bg-gradient-to-r from-safran-400 to-bordeaux-600 transition-[width] duration-700 ease-out" style={{ width: `${fraction * 100}%` }} />
+        <div className="relative h-[40px]">
+          <div
+            className={`absolute bottom-[5px] z-10 transition-[left] duration-700 ease-out ${walking ? "pig-walking" : ""} ${ready && !walking ? "pig-ready" : ""}`}
+            style={{ left: `calc((100% - 46px) * ${fraction})`, width: 46 }}
+          >
+            <WalkingPig width={46} />
+          </div>
+          <div className="absolute inset-x-0 bottom-0 h-[6px] overflow-hidden rounded-full border-2 border-[#1a1a1a] bg-white">
+            <div className="h-full rounded-full bg-gradient-to-r from-safran-400 to-bordeaux-600 transition-[width] duration-700 ease-out" style={{ width: `${fraction * 100}%` }} />
+          </div>
+          <span className="absolute -bottom-1 right-0 text-lg" aria-hidden>
+            🍽️
+          </span>
         </div>
-        <span className="absolute -bottom-1 right-0 text-xl" aria-hidden>
-          🍽️
-        </span>
       </div>
     </div>
-  );
-  return (
-    <>
-      <div ref={anchor}>{content}</div>
-      <div
-        aria-hidden={!stuck}
-        className={`fixed inset-x-0 top-16 z-30 border-b-2 border-[#1a1a1a]/20 bg-creme-50/95 px-6 pb-2 pt-2 backdrop-blur transition-transform duration-300 md:top-20 ${stuck ? "translate-y-0" : "pointer-events-none -translate-y-[160%]"}`}
-      >
-        {content}
-      </div>
-    </>
   );
 }
 
@@ -253,7 +234,7 @@ export default function DevisPage() {
   const [email, setEmail] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventPlace, setEventPlace] = useState("");
-  const [numberOfPeople, setNumberOfPeople] = useState("50");
+  const [numberOfPeople, setNumberOfPeople] = useState("");
   const [mainDish, setMainDish] = useState("");
   const [starters, setStarters] = useState<string[]>([]);
   const [desserts, setDesserts] = useState<string[]>([]);
@@ -261,6 +242,12 @@ export default function DevisPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [mailSent, setMailSent] = useState(true);
+  const [outcome, setOutcome] = useState<Outcome>("new");
+  const [previous, setPrevious] = useState<string | null>(null);
+  const submittingRef = useRef(false);
+  const [submissionId] = useState(() =>
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [rating, setRating] = useState<{ avg: number; total: number } | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -288,6 +275,21 @@ export default function DevisPage() {
     };
   }, []);
 
+  // Si ce visiteur a déjà envoyé une demande récemment : on le rassure au lieu de le laisser insister.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SENT_KEY);
+      if (!raw) return;
+      const { at } = JSON.parse(raw) as { at?: string };
+      const t0 = at ? new Date(at).getTime() : NaN;
+      if (Number.isFinite(t0) && Date.now() - t0 < SENT_DAYS * 24 * 60 * 60 * 1000) {
+        setPrevious(new Date(t0).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }));
+      }
+    } catch {
+      /* stockage local indisponible */
+    }
+  }, []);
+
   useEffect(() => {
     if (errorMsg) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [errorMsg]);
@@ -302,21 +304,21 @@ export default function DevisPage() {
   const mainItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "main_dish") ?? [];
   const dessertItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "dessert") ?? [];
 
-  const checks = [
-    lastName.trim().length > 0,
-    firstName.trim().length > 0,
-    (phone.match(/\d/g) || []).length >= 8,
-    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()),
-    (parseInt(numberOfPeople, 10) || 0) >= 1,
-    ...(mainItems.length > 0 ? [Boolean(mainDish)] : []),
+  const required: { label: string; ok: boolean }[] = [
+    { label: "nom", ok: lastName.trim().length > 0 },
+    { label: "prénom", ok: firstName.trim().length > 0 },
+    { label: "téléphone", ok: (phone.match(/\d/g) || []).length >= 8 },
+    { label: "e-mail", ok: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) },
+    { label: "nombre de personnes", ok: (parseInt(numberOfPeople, 10) || 0) >= 1 },
+    ...(mainItems.length > 0 ? [{ label: "plat principal", ok: Boolean(mainDish) }] : []),
   ];
-  const doneCount = checks.filter(Boolean).length;
-  const fraction = doneCount / checks.length;
-  const remaining = checks.length - doneCount;
+  const doneCount = required.filter((r) => r.ok).length;
+  const fraction = doneCount / required.length;
+  const missing = required.filter((r) => !r.ok).map((r) => r.label);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || submittingRef.current) return;
     const n = parseInt(numberOfPeople, 10);
     if (!n || n < 1) {
       setErrorMsg("Veuillez indiquer un nombre de personnes valide.");
@@ -327,6 +329,7 @@ export default function DevisPage() {
       setErrorMsg("Veuillez choisir un plat principal : touchez une des photos de l'étape 3.");
       return;
     }
+    submittingRef.current = true;
     setSubmitting(true);
     setErrorMsg(null);
     const namesById = buildNameMap(data?.items ?? []);
@@ -350,20 +353,27 @@ export default function DevisPage() {
         desserts_labels: dessertsLabels,
         message: message.trim() ? message : undefined,
       };
-      const result = await sendDevis({ ...payload, website, form_started_at: formStartedAt });
+      const result = await sendDevis({ ...payload, website, form_started_at: formStartedAt, submission_id: submissionId });
       setMailSent(result.customerMailed !== false);
+      setOutcome(result.updated ? "updated" : result.duplicate ? "duplicate" : "new");
+      try {
+        localStorage.setItem(SENT_KEY, JSON.stringify({ at: new Date().toISOString() }));
+      } catch {
+        /* stockage local indisponible */
+      }
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Erreur d’envoi");
     }
+    submittingRef.current = false;
     setSubmitting(false);
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-creme-50 text-ardoise-800">
       <Navbar />
-      <main className="flex-1 pb-16 pt-20 md:pt-24">
+      <main className={`flex-1 pb-16 ${success ? "pt-20 md:pt-24" : "pt-[9.5rem] md:pt-[10.5rem]"}`}>
         <div className="mx-auto min-w-0 max-w-3xl px-6">
           <div className="relative mb-8 overflow-hidden rounded-3xl border-4 border-[#1a1a1a] bg-gradient-to-br from-ardoise-800 via-ardoise-800 to-bordeaux-800 px-6 py-10 text-center shadow-[6px_6px_0_#111] sm:py-12">
             <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-safran-500/20 blur-3xl" />
@@ -389,6 +399,16 @@ export default function DevisPage() {
             </div>
           </div>
 
+          {!success && previous ? (
+            <div role="status" className="mb-6 rounded-2xl border-[3px] border-[#1a1a1a] bg-safran-100 px-5 py-4 font-body text-sm text-ardoise-900 shadow-[4px_4px_0_#111]">
+              <p className="font-bold">👋 Vous nous avez déjà envoyé une demande ({previous}).</p>
+              <p className="mt-1">
+                Pas besoin de la renvoyer : Martin vous répond très vite. Si vous voulez la modifier, remplissez simplement le formulaire à nouveau : elle remplacera la précédente, sans doublon. Urgent ? Appelez-nous au{" "}
+                <a href={`tel:${PHONE_TEL}`} className="font-bold text-bordeaux-700 underline underline-offset-2">{PHONE_DISPLAY}</a>.
+              </p>
+              <button type="button" onClick={() => setPrevious(null)} className="mt-2 text-xs font-semibold text-ardoise-700 underline underline-offset-2">Masquer ce message</button>
+            </div>
+          ) : null}
           {success ? (
             <div className="animate-fade-in relative overflow-hidden rounded-3xl border-4 border-[#1a1a1a] bg-white p-8 text-center shadow-[6px_6px_0_#111] sm:p-12">
               <span className="confetti confetti-1" aria-hidden>🔥</span>
@@ -399,9 +419,15 @@ export default function DevisPage() {
               <div className="pig-walking mx-auto mb-4 flex w-fit justify-center">
                 <WalkingPig width={110} />
               </div>
-              <h2 className="mb-2 font-display text-3xl text-ardoise-900 sm:text-4xl">Votre demande est partie !</h2>
+              <h2 className="mb-2 font-display text-3xl text-ardoise-900 sm:text-4xl">
+                {outcome === "updated" ? "Votre demande a été mise à jour !" : outcome === "duplicate" ? "Votre demande est déjà enregistrée ✔" : "Votre demande est partie !"}
+              </h2>
               <p className="mx-auto max-w-md font-body text-ardoise-700">
-                {mailSent
+                {outcome === "duplicate"
+                  ? "Pas de panique : on l'a bien reçue, inutile de la renvoyer. Martin revient vers vous très vite."
+                  : outcome === "updated"
+                  ? "Elle remplace votre précédente demande (pas de doublon). Martin revient vers vous très vite."
+                  : mailSent
                   ? "Un e-mail de confirmation avec le récapitulatif vient de vous être envoyé (pensez à regarder vos courriers indésirables). Martin revient vers vous très vite."
                   : "Votre demande est bien enregistrée (nous n'avons pas pu vous envoyer d'e-mail de confirmation cette fois). Martin revient vers vous très vite."}
               </p>
@@ -414,7 +440,7 @@ export default function DevisPage() {
             </div>
           ) : (
             <form onSubmit={onSubmit} className="devis-form min-w-0">
-              <ProgressTrack fraction={fraction} remaining={remaining} />
+              <ProgressTrack fraction={fraction} missing={missing} />
               <div className="mt-6 space-y-6">
                 <StepCard n={1} title="Qui êtes-vous ?" hint="Pour que Martin puisse vous répondre.">
                   <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
@@ -450,7 +476,7 @@ export default function DevisPage() {
                   </div>
                   <div className="mt-4">
                     <label className="form-label" htmlFor="d-nb">Nombre de personnes *</label>
-                    <input id="d-nb" className="form-input box-border block w-full min-w-0 max-w-full sm:max-w-[200px]" type="number" inputMode="numeric" min={1} required value={numberOfPeople} onChange={(e) => setNumberOfPeople(e.target.value)} />
+                    <input id="d-nb" className="form-input box-border block w-full min-w-0 max-w-full sm:max-w-[200px]" type="number" inputMode="numeric" min={1} required placeholder="Ex : 50" value={numberOfPeople} onChange={(e) => setNumberOfPeople(e.target.value)} />
                     <div className="mt-3 flex flex-wrap gap-2">
                       {GUEST_SHORTCUTS.map((n) => (
                         <button
@@ -562,6 +588,8 @@ export default function DevisPage() {
     </div>
   );
 }
+
+
 
 
 

@@ -524,3 +524,27 @@ div[mapboxgl-children] {
   .pig-ready, .cta-ready, .confetti { animation: none; }
 }
 
+
+/* iPhone : un champ dont le texte fait moins de 16 px déclenche un zoom à la saisie (et la page reste zoomée) */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Les champs date mobiles ont une largeur minimale propre qui faisait déborder le cadre */
+.form-input[type="date"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.9rem;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}

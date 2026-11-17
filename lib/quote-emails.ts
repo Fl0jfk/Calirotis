@@ -110,7 +110,7 @@ function emailShell(params: {
 </body></html>`;
 }
 
-export function buildQuoteEmails(quote: QuoteEmailData) {
+export function buildQuoteEmails(quote: QuoteEmailData, opts: { updateOf?: string } = {}) {
   const customerName = `${quote.first_name} ${quote.last_name}`.trim();
   const starters = (quote.starters_labels || []).filter(Boolean);
   const mainDish = quote.main_dish_label?.trim() || quote.main_dish || "";
@@ -170,9 +170,11 @@ export function buildQuoteEmails(quote: QuoteEmailData) {
 
   const adminHtml = emailShell({
     preheader: `${customerName} · ${people} pers. · ${eventDate}`,
-    kicker: "Nouvelle demande de devis",
+    kicker: opts.updateOf ? "Demande mise à jour" : "Nouvelle demande de devis",
     title: `${customerName} — ${people} pers.`,
-    intro: `Une nouvelle demande vient d'arriver depuis le site (${escapeHtml(createdAt)}). Répondre vite, c'est le meilleur moyen de la transformer en réservation.`,
+    intro: opts.updateOf
+      ? `Ce client avait déjà envoyé une demande le ${escapeHtml(opts.updateOf)} : il vient de la modifier (${escapeHtml(createdAt)}). Cette version remplace la précédente.`
+      : `Une nouvelle demande vient d'arriver depuis le site (${escapeHtml(createdAt)}). Répondre vite, c'est le meilleur moyen de la transformer en réservation.`,
     bodyHtml:
       `<p style="margin:0 0 18px 0;">${button(`tel:${phoneTel}`, `📞 Appeler ${quote.first_name}`, BRAISE)}${button(`mailto:${quote.email}?subject=${encodeURIComponent("Votre demande de devis Calirotis")}`, "✉️ Répondre", "#ffffff", INK)}</p>` +
       eventSection +
@@ -205,7 +207,7 @@ export function buildQuoteEmails(quote: QuoteEmailData) {
   });
 
   return {
-    adminSubject: `🔥 Nouveau devis – ${customerName} – ${people} pers.${quote.event_date ? ` – ${eventDate}` : ""}`,
+    adminSubject: `${opts.updateOf ? "✏️ Devis mis à jour" : "🔥 Nouveau devis"} – ${customerName} – ${people} pers.${quote.event_date ? ` – ${eventDate}` : ""}`,
     adminText: `Une nouvelle demande de devis a été reçue le ${createdAt}.\n\n${summaryText}`,
     adminHtml,
     customerSubject: "Calirotis – on a bien reçu votre demande de devis 🐖",

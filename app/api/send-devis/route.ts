@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../lib/storage-env";
 import { buildQuoteEmails } from "../../../lib/quote-emails";
 import { adminRecipients, createMailer, describeMailError } from "../../../lib/mailer";
+import { classify, contactKey, findRecent } from "../../../lib/quote-dedupe";
 
 const KEY = "quotes.json";
 
@@ -27,6 +28,11 @@ type QuoteRequest = {
   mail_admin?: boolean;
   mail_customer?: boolean;
   mail_error?: string;
+  submission_id?: string;
+  repeat_count?: number;
+  last_repeat_at?: string;
+  revision?: number;
+  first_created_at?: string;
 };
 type QuotesData = { quotes: QuoteRequest[] };
 
@@ -87,7 +93,7 @@ function quoteId() {
 type MailStatus = { admin: boolean; customer: boolean; error?: string };
 
 /** Envoie les deux e-mails. Ne lève jamais d'exception : renvoie le résultat de chacun. */
-async function sendQuoteEmails(quote: QuoteRequest): Promise<MailStatus> {
+async function sendQuoteEmails(quote: QuoteRequest, opts: { updateOf?: string } = {}): Promise<MailStatus> {
   let mailer: ReturnType<typeof createMailer>;
   try {
     mailer = createMailer();
@@ -96,7 +102,7 @@ async function sendQuoteEmails(quote: QuoteRequest): Promise<MailStatus> {
     return { admin: false, customer: false, error: describeMailError(e) };
   }
   const { user, transporter } = mailer;
-  const mail = buildQuoteEmails(quote);
+  const mail = buildQuoteEmails(quote, opts);
   const [adminResult, customerResult] = await Promise.allSettled([
     transporter.sendMail({
       from: `"Calirotis" <${user}>`,
@@ -183,7 +189,7 @@ function fail(error: string, status = 400) {
   return NextResponse.json({ error }, { status });
 }
 
-type IncomingBody = NewQuote & { website?: unknown; form_started_at?: unknown };
+type IncomingBody = NewQuote & { website?: unknown; form_started_at?: unknown; submission_id?: unknown };
 
 export async function POST(req: Request) {
   let body: IncomingBody;
@@ -248,27 +254,102 @@ export async function POST(req: Request) {
     desserts_labels: strList(body.desserts_labels),
     message: message || null,
     created_at: new Date().toISOString(),
+    submission_id: str(body.submission_id, 80) || undefined,
   };
 
+  // Un même client qui valide deux fois de suite (double clic, page lente) : la seconde requête attend d'être inutile.
+  const lockKey = contactKey(newQuote);
+  if (inFlight.has(lockKey)) {
+    return NextResponse.json({ ok: true, duplicate: true, saved: true, mailed: true, customerMailed: true });
+  }
+  inFlight.add(lockKey);
+  try {
+    return await handleQuote(newQuote);
+  } finally {
+    inFlight.delete(lockKey);
+  }
+}
+
+const inFlight = new Set<string>();
+
+/** Relit le fichier juste avant d'écrire, pour ne pas écraser un devis arrivé entre-temps. */
+async function persist(st: StorageContext, change: (quotes: QuoteRequest[]) => QuoteRequest[]): Promise<void> {
+  const fresh = await loadQuotes(st);
+  await saveQuotes(st, { quotes: change(fresh.quotes) });
+}
+
+async function handleQuote(newQuote: QuoteRequest) {
+  const st = getStorage();
+  if (!st) console.error("[send-devis] stockage non configuré", storageConfigErrorJson().debug);
+
+  // Lecture des demandes existantes pour repérer un doublon (même e-mail ou même téléphone, sur les 7 derniers jours).
+  let existing: QuoteRequest | undefined;
+  if (st) {
+    try {
+      existing = findRecent((await loadQuotes(st)).quotes, newQuote);
+    } catch (e) {
+      console.error("[send-devis] lecture des devis échouée (pas de détection de doublon)", e);
+    }
+  }
+  const kind = existing ? classify(existing, newQuote) : null;
+  const now = new Date().toISOString();
+
+  // Doublon pur : ni nouvelle fiche ni nouveaux e-mails, sauf si les e-mails de la 1re demande n'étaient pas partis.
+  if (existing && st && (kind === "retry" || kind === "same")) {
+    const mailsOk = existing.mail_admin !== false && existing.mail_customer !== false;
+    if (mailsOk) {
+      if (kind === "same") {
+        const id = existing.id;
+        try {
+          await persist(st, (qs) => qs.map((q) => (q.id === id ? { ...q, repeat_count: (q.repeat_count || 0) + 1, last_repeat_at: now } : q)));
+        } catch (e) {
+          console.error("[send-devis] compteur de relances non enregistré", e);
+        }
+      }
+      return NextResponse.json({ ok: true, duplicate: true, saved: true, mailed: true, customerMailed: true });
+    }
+    // E-mails de la 1re tentative en échec : on les renvoie maintenant et on met à jour la fiche existante.
+    const resend = await sendQuoteEmails(existing);
+    const id = existing.id;
+    try {
+      await persist(st, (qs) =>
+        qs.map((q) =>
+          q.id === id
+            ? { ...q, mail_admin: resend.admin, mail_customer: resend.customer, mail_error: resend.error, repeat_count: (q.repeat_count || 0) + 1, last_repeat_at: now }
+            : q,
+        ),
+      );
+    } catch (e) {
+      console.error("[send-devis] statut des e-mails non mis à jour", e);
+    }
+    return NextResponse.json({ ok: true, duplicate: true, saved: true, mailed: resend.admin, customerMailed: resend.customer });
+  }
+
+  // Demande modifiée par le même client : elle remplace la précédente (et remonte en tête de liste).
+  const isUpdate = Boolean(existing && kind === "changed");
+  const firstAt = existing ? existing.first_created_at || existing.created_at : undefined;
+  const updateLabel = firstAt ? new Date(firstAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : undefined;
+
   // 1) e-mails (délais bornés, jamais d'exception), 2) enregistrement avec le statut des e-mails.
-  // Chacun est tenté séparément : si l'un des deux marche, la demande n'est pas perdue.
-  const mail = await sendQuoteEmails(newQuote);
+  const mail = await sendQuoteEmails(newQuote, isUpdate ? { updateOf: updateLabel } : {});
   newQuote.mail_admin = mail.admin;
   newQuote.mail_customer = mail.customer;
   if (mail.error) newQuote.mail_error = mail.error;
+  if (isUpdate && existing) {
+    newQuote.revision = (existing.revision || 0) + 1;
+    newQuote.first_created_at = firstAt;
+    if (existing.repeat_count) newQuote.repeat_count = existing.repeat_count;
+  }
 
   let saved = false;
-  const st = getStorage();
   if (st) {
     try {
-      const quotesData = await loadQuotes(st);
-      await saveQuotes(st, { quotes: [newQuote, ...quotesData.quotes] });
+      const replacedId = isUpdate && existing ? existing.id : null;
+      await persist(st, (qs) => [newQuote, ...(replacedId ? qs.filter((q) => q.id !== replacedId) : qs)]);
       saved = true;
     } catch (e) {
       console.error("[send-devis] enregistrement du devis échoué", e);
     }
-  } else {
-    console.error("[send-devis] stockage non configuré", storageConfigErrorJson().debug);
   }
 
   if (!saved && !mail.admin) {
@@ -277,6 +358,6 @@ export async function POST(req: Request) {
       500,
     );
   }
-  return NextResponse.json({ ok: true, id: newQuote.id, saved, mailed: mail.admin, customerMailed: mail.customer });
+  return NextResponse.json({ ok: true, id: newQuote.id, saved, updated: isUpdate, mailed: mail.admin, customerMailed: mail.customer });
 }
 

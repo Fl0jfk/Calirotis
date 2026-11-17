@@ -66,7 +66,7 @@ function ReviewBubble({ review, active }: { review: Review; active: boolean }) {
   return (
     <article
       aria-hidden={!active}
-      className="relative flex h-full flex-col rounded-3xl border-4 border-[#1a1a1a] bg-creme-50 p-6 pt-7 shadow-[6px_6px_0_#111] sm:p-7 sm:pt-8"
+      className="relative flex h-full flex-col rounded-3xl border-4 border-[#1a1a1a] bg-creme-50 p-5 pt-6 shadow-[6px_6px_0_#111] sm:p-7 sm:pt-8"
     >
       <span aria-hidden className="absolute left-5 top-3 font-display text-[5.5rem] leading-[0.75] text-bordeaux-700 [text-shadow:2px_2px_0_#1a1a1a]">
         &ldquo;
@@ -76,11 +76,11 @@ function ReviewBubble({ review, active }: { review: Review; active: boolean }) {
         <GoogleLogo />
       </div>
       <div className="flex flex-1 items-center py-2">
-        <p className={`${review.text.length < 90 ? "font-hand text-2xl leading-snug sm:text-3xl" : review.text.length < 240 ? "font-body text-lg leading-relaxed sm:text-xl" : "font-body text-base leading-relaxed sm:text-[17px]"} text-ardoise-800`}>
+        <p className={`${review.text.length < 90 ? "font-hand text-2xl leading-snug sm:text-3xl" : review.text.length < 240 ? "line-clamp-5 font-body text-base leading-relaxed sm:line-clamp-6 sm:text-xl" : "line-clamp-5 font-body text-[15px] leading-relaxed sm:line-clamp-[9] sm:text-[17px]"} text-ardoise-800`}>
           {review.text}
         </p>
       </div>
-      <footer className="mt-5 flex items-center justify-between gap-3 border-t-2 border-dashed border-ardoise-300 pt-4">
+      <footer className="mt-3 flex items-center justify-between gap-3 border-t-2 border-dashed border-ardoise-300 pt-4">
         <div className="flex min-w-0 items-center gap-3">
           <span
             className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-[#1a1a1a] font-display text-base text-white ${authorColor(review.author)}`}
@@ -220,7 +220,7 @@ export function ReviewsCarousel() {
       onFocusCapture={() => (pausedRef.current = true)}
       onBlurCapture={() => (pausedRef.current = false)}
     >
-      <div className="mb-10 flex flex-col items-center gap-2">
+      <div className="mb-8 flex flex-col items-center gap-2 sm:mb-10">
         <div className="inline-flex items-center gap-3 rounded-full border-4 border-[#1a1a1a] bg-white px-5 py-2 shadow-[4px_4px_0_#111]">
           <GoogleLogo className="h-6 w-6" />
           <span className="font-display text-2xl leading-none text-ardoise-900">{avg.toFixed(1).replace(".", ",")}</span>
@@ -274,7 +274,7 @@ export function ReviewsCarousel() {
         </button>
       </div>
 
-      <div className="relative mx-auto mt-7 max-w-3xl">
+      <div className="relative mx-auto mt-5 max-w-3xl sm:mt-7">
         <div className="relative h-[64px]">
           <div ref={pigRef} className="pig-walking absolute bottom-[8px]" style={{ left: 0, width: PIG_W }}>
             <div ref={flipRef} style={{ transformOrigin: "50% 100%" }}>
@@ -297,7 +297,7 @@ export function ReviewsCarousel() {
             </div>
           </div>
         </div>
-        <div className="mt-6 flex flex-col items-center gap-2">
+        <div className="mt-4 flex flex-col items-center gap-2 sm:mt-6">
           <span className="font-hand text-sm text-ardoise-600">
             Avis {index + 1} / {total}
           </span>
@@ -314,6 +314,8 @@ export function ReviewsCarousel() {
     </div>
   );
 }
+
+
 
 
 

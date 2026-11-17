@@ -41,6 +41,10 @@ type QuoteRequest = {
   mail_admin?: boolean;
   mail_customer?: boolean;
   mail_error?: string;
+  repeat_count?: number;
+  last_repeat_at?: string;
+  revision?: number;
+  first_created_at?: string;
 };
 type QuotesData = { quotes: QuoteRequest[] };
 
@@ -335,6 +339,12 @@ function QuoteCard({ q, dishNames }: { q: QuoteRequest; dishNames: Record<string
           {q.mail_customer === false ? (
             <span title={q.mail_error} className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900">⚠ Confirmation client non envoyée</span>
           ) : null}
+          {q.repeat_count ? (
+            <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900">🔁 Relancé {q.repeat_count} fois : à rappeler en priorité</span>
+          ) : null}
+          {q.revision ? (
+            <span className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-900">✏️ Demande mise à jour{q.first_created_at ? ` (1re demande le ${new Date(q.first_created_at).toLocaleDateString("fr-FR")})` : ""}</span>
+          ) : null}
           {q.mail_admin === true && q.mail_customer === true ? (
             <span className="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-800">✉ E-mails envoyés</span>
           ) : null}
@@ -473,6 +483,24 @@ function QuotesPanel() {
     if (!data?.quotes) return [];
     return [...data.quotes].filter((row) => row && typeof row === "object").sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   }, [data]);
+  const [groupDupes, setGroupDupes] = useState(true);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const groups = useMemo(() => {
+    const DAY = 24 * 60 * 60 * 1000;
+    const mail = (q: QuoteRequest) => (q.email || "").trim().toLowerCase();
+    const tel = (q: QuoteRequest) => ((q.phone || "").match(/\d/g) || []).join("").slice(-9);
+    const out: { main: QuoteRequest; dupes: QuoteRequest[] }[] = [];
+    for (const q of sorted) {
+      const time = new Date(q.created_at).getTime();
+      const g = out.find((x) => {
+        const near = Math.abs(new Date(x.main.created_at).getTime() - time) <= 7 * DAY;
+        return near && ((mail(q) !== "" && mail(q) === mail(x.main)) || (tel(q).length >= 8 && tel(q) === tel(x.main)));
+      });
+      if (g) g.dupes.push(q); else out.push({ main: q, dupes: [] });
+    }
+    return out;
+  }, [sorted]);
+  const dupCount = groups.reduce((s, g) => s + g.dupes.length, 0);
   return (
     <div className="pb-16">
       <div className="mb-6 flex items-center justify-between">
@@ -492,9 +520,39 @@ function QuotesPanel() {
           <p>Aucune demande pour le moment.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {sorted.map((q) => <QuoteCard key={q.id} q={q} dishNames={dishNames} />)}
-        </div>
+        <>
+          {dupCount > 0 ? (
+            <label className="mb-4 flex cursor-pointer items-center gap-2 text-sm text-ardoise-800">
+              <input type="checkbox" checked={groupDupes} onChange={(e) => setGroupDupes(e.target.checked)} className="h-4 w-4 accent-bordeaux-700" />
+              Regrouper les doublons ({dupCount} envoi{dupCount > 1 ? "s" : ""} en double d'un même client sur 7 jours)
+            </label>
+          ) : null}
+          <div className="space-y-4">
+            {groupDupes
+              ? groups.map((g) => (
+                  <div key={g.main.id}>
+                    <QuoteCard q={g.main} dishNames={dishNames} />
+                    {g.dupes.length > 0 ? (
+                      <div className="mt-2">
+                        <button
+                          type="button"
+                          className="text-sm font-semibold text-bordeaux-700 underline underline-offset-2"
+                          onClick={() => setOpenGroups((o) => ({ ...o, [g.main.id]: !o[g.main.id] }))}
+                        >
+                          🔁 {g.dupes.length} envoi{g.dupes.length > 1 ? "s" : ""} précédent{g.dupes.length > 1 ? "s" : ""} du même client {openGroups[g.main.id] ? "(masquer)" : "(afficher)"}
+                        </button>
+                        {openGroups[g.main.id] ? (
+                          <div className="mt-3 space-y-3 border-l-4 border-amber-300 pl-4 opacity-80">
+                            {g.dupes.map((q) => <QuoteCard key={q.id} q={q} dishNames={dishNames} />)}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ))
+              : sorted.map((q) => <QuoteCard key={q.id} q={q} dishNames={dishNames} />)}
+          </div>
+        </>
       )}
     </div>
   );
