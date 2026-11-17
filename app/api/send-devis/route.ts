@@ -1,9 +1,9 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../lib/storage-env";
 import { buildQuoteEmails } from "../../../lib/quote-emails";
+import { adminRecipients, createMailer, describeMailError } from "../../../lib/mailer";
 
 const KEY = "quotes.json";
 
@@ -24,6 +24,9 @@ type QuoteRequest = {
   desserts_labels?: string[];
   message?: string | null;
   created_at: string;
+  mail_admin?: boolean;
+  mail_customer?: boolean;
+  mail_error?: string;
 };
 type QuotesData = { quotes: QuoteRequest[] };
 
@@ -81,31 +84,18 @@ function quoteId() {
   return `q_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function createMailer() {
-  const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASS?.trim();
-  if (!user || !pass) {
-    throw new Error("Configuration e-mail manquante : ajoutez SMTP_USER et SMTP_PASS.");
+type MailStatus = { admin: boolean; customer: boolean; error?: string };
+
+/** Envoie les deux e-mails. Ne lève jamais d'exception : renvoie le résultat de chacun. */
+async function sendQuoteEmails(quote: QuoteRequest): Promise<MailStatus> {
+  let mailer: ReturnType<typeof createMailer>;
+  try {
+    mailer = createMailer();
+  } catch (e) {
+    console.error("[send-devis] e-mails impossibles", e);
+    return { admin: false, customer: false, error: describeMailError(e) };
   }
-  return {
-    user,
-    transporter: nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-    }),
-  };
-}
-
-/** Destinataire(s) des nouvelles demandes. Par défaut le compte SMTP lui-même. */
-function adminRecipients(fallback: string): string {
-  const raw = (process.env.QUOTE_RECIPIENTS || process.env.ADMIN_EMAIL || "").trim();
-  return raw || fallback;
-}
-
-async function sendQuoteEmails(quote: QuoteRequest) {
-  const { user, transporter } = createMailer();
+  const { user, transporter } = mailer;
   const mail = buildQuoteEmails(quote);
   const [adminResult, customerResult] = await Promise.allSettled([
     transporter.sendMail({
@@ -125,13 +115,20 @@ async function sendQuoteEmails(quote: QuoteRequest) {
       html: mail.customerHtml,
     }),
   ]);
-  if (customerResult.status === "rejected") {
-    console.error("[send-devis] e-mail de confirmation client non envoyé", customerResult.reason);
-  }
+  const errors: string[] = [];
   if (adminResult.status === "rejected") {
     console.error("[send-devis] e-mail admin non envoyé", adminResult.reason);
-    throw adminResult.reason;
+    errors.push(`notification : ${describeMailError(adminResult.reason)}`);
   }
+  if (customerResult.status === "rejected") {
+    console.error("[send-devis] e-mail de confirmation client non envoyé", customerResult.reason);
+    errors.push(`confirmation client : ${describeMailError(customerResult.reason)}`);
+  }
+  return {
+    admin: adminResult.status === "fulfilled",
+    customer: customerResult.status === "fulfilled",
+    error: errors.length ? errors.join(" | ").slice(0, 300) : undefined,
+  };
 }
 
 // ---------- Anti-bot ----------
@@ -253,9 +250,14 @@ export async function POST(req: Request) {
     created_at: new Date().toISOString(),
   };
 
-  // On tente l'enregistrement ET l'e-mail séparément : si l'un des deux marche, la demande n'est pas perdue.
+  // 1) e-mails (délais bornés, jamais d'exception), 2) enregistrement avec le statut des e-mails.
+  // Chacun est tenté séparément : si l'un des deux marche, la demande n'est pas perdue.
+  const mail = await sendQuoteEmails(newQuote);
+  newQuote.mail_admin = mail.admin;
+  newQuote.mail_customer = mail.customer;
+  if (mail.error) newQuote.mail_error = mail.error;
+
   let saved = false;
-  let mailed = false;
   const st = getStorage();
   if (st) {
     try {
@@ -268,19 +270,13 @@ export async function POST(req: Request) {
   } else {
     console.error("[send-devis] stockage non configuré", storageConfigErrorJson().debug);
   }
-  try {
-    await sendQuoteEmails(newQuote);
-    mailed = true;
-  } catch (e) {
-    console.error("[send-devis] envoi e-mail échoué", e);
-  }
 
-  if (!saved && !mailed) {
+  if (!saved && !mail.admin) {
     return fail(
       "Votre demande n'a pas pu être envoyée suite à un problème technique. Merci de nous appeler au 06.02.20.85.40.",
       500,
     );
   }
-  return NextResponse.json({ ok: true, id: newQuote.id, saved, mailed });
+  return NextResponse.json({ ok: true, id: newQuote.id, saved, mailed: mail.admin, customerMailed: mail.customer });
 }
 

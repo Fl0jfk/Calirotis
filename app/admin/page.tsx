@@ -38,6 +38,9 @@ type QuoteRequest = {
   desserts_labels?: string[];
   message?: string | null;
   created_at: string;
+  mail_admin?: boolean;
+  mail_customer?: boolean;
+  mail_error?: string;
 };
 type QuotesData = { quotes: QuoteRequest[] };
 
@@ -325,6 +328,17 @@ function QuoteCard({ q, dishNames }: { q: QuoteRequest; dishNames: Record<string
           <h3 className="text-lg font-semibold text-ardoise-900">{fullName}</h3>
           <p className="text-sm text-ardoise-500">{dateShort}</p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          {q.mail_admin === false ? (
+            <span title={q.mail_error} className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs font-semibold text-red-800">⚠ Notification e-mail non envoyée</span>
+          ) : null}
+          {q.mail_customer === false ? (
+            <span title={q.mail_error} className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900">⚠ Confirmation client non envoyée</span>
+          ) : null}
+          {q.mail_admin === true && q.mail_customer === true ? (
+            <span className="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-800">✉ E-mails envoyés</span>
+          ) : null}
+        </div>
       </div>
       <div className="mb-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <div>
@@ -355,6 +369,91 @@ function QuoteCard({ q, dishNames }: { q: QuoteRequest; dishNames: Record<string
   );
 }
 
+type DiagData = {
+  smtp: { configured: boolean; user: string | null; recipients: string | null; verified: boolean; error: string | null };
+  storage: { ok: boolean; error: string | null };
+  quotes: { total: number; lastAt: string | null; tracked: number; adminMailFailed: number; customerMailFailed: number };
+};
+
+function MailDiagnostic() {
+  const [diag, setDiag] = useState<DiagData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [testNote, setTestNote] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+  async function check() {
+    setLoading(true);
+    setError(null);
+    setTestNote(null);
+    try {
+      const r = await fetch("/api/admin/diagnostics", { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status === 401 ? "Session expirée : reconnectez-vous." : `Erreur ${r.status}`);
+      setDiag((await r.json()) as DiagData);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    }
+    setLoading(false);
+  }
+  async function sendTest() {
+    setTesting(true);
+    setTestNote(null);
+    try {
+      const r = await fetch("/api/admin/diagnostics", { method: "POST" });
+      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; to?: string; error?: string };
+      setTestNote(r.ok && j.ok ? `✅ E-mail de test envoyé à ${j.to}. Vérifiez la boîte de réception (et les indésirables).` : `❌ Échec de l'envoi : ${j.error || r.status}`);
+    } catch {
+      setTestNote("❌ Impossible de joindre le serveur.");
+    }
+    setTesting(false);
+  }
+  const line = "text-sm text-ardoise-800";
+  return (
+    <div className="mb-6 rounded-2xl border-2 border-ardoise-300 bg-white p-5 text-ardoise-800">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="font-display text-lg text-ardoise-900">🩺 Vérifier l&apos;envoi des e-mails</h3>
+          <p className="text-sm text-ardoise-600">Teste la connexion au service d&apos;e-mails du site, sans rien envoyer à un client.</p>
+        </div>
+        <button type="button" className="btn btn-safran justify-center px-5 py-2.5 text-sm" onClick={check} disabled={loading}>
+          {loading ? "Vérification…" : "Vérifier maintenant"}
+        </button>
+      </div>
+      {error ? <p className="mt-4 text-sm font-semibold text-red-700">{error}</p> : null}
+      {diag ? (
+        <ul className="mt-4 space-y-2">
+          <li className={line}>
+            {diag.smtp.verified ? (
+              <>✅ <strong>Service d&apos;e-mails connecté</strong> (compte {diag.smtp.user}).</>
+            ) : (
+              <>❌ <strong>Service d&apos;e-mails en panne ou mal configuré</strong> : <span className="text-red-700">{diag.smtp.error}</span></>
+            )}
+          </li>
+          {diag.smtp.recipients ? <li className={line}>📬 Les notifications de devis sont envoyées à : <strong>{diag.smtp.recipients}</strong></li> : null}
+          <li className={line}>{diag.storage.ok ? <>✅ Stockage des devis accessible.</> : <>❌ Stockage des devis : <span className="text-red-700">{diag.storage.error}</span></>}</li>
+          <li className={line}>
+            📋 {diag.quotes.total} devis enregistrés{diag.quotes.lastAt ? <> (dernier : {new Date(diag.quotes.lastAt).toLocaleString("fr-FR")})</> : null}.
+          </li>
+          <li className={line}>
+            {diag.quotes.tracked === 0 ? (
+              <>ℹ️ Le suivi « e-mail envoyé / non envoyé » commence avec le prochain devis reçu : il apparaîtra en haut de chaque fiche.</>
+            ) : (
+              <>📊 Sur {diag.quotes.tracked} devis suivis : <strong className={diag.quotes.adminMailFailed ? "text-red-700" : ""}>{diag.quotes.adminMailFailed} notification(s) non envoyée(s)</strong>, <strong className={diag.quotes.customerMailFailed ? "text-amber-800" : ""}>{diag.quotes.customerMailFailed} confirmation(s) client non envoyée(s)</strong>.</>
+            )}
+          </li>
+        </ul>
+      ) : null}
+      {diag?.smtp.verified ? (
+        <div className="mt-4 flex flex-col gap-2 border-t border-creme-200 pt-4 sm:flex-row sm:items-center">
+          <button type="button" className="btn btn-outline justify-center px-5 py-2 text-sm" onClick={sendTest} disabled={testing}>
+            {testing ? "Envoi…" : "M'envoyer un e-mail de test"}
+          </button>
+          {testNote ? <p className="text-sm text-ardoise-800">{testNote}</p> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function QuotesPanel() {
   const [data, setData] = useState<QuotesData | null | undefined>(undefined);
   const [dishNames, setDishNames] = useState<Record<string, string>>({});
@@ -378,8 +477,9 @@ function QuotesPanel() {
     <div className="pb-16">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-display text-2xl text-ardoise-900">Demandes de devis</h2>
-        <button type="button" className="btn btn-ghost px-4 py-2 text-sm" onClick={() => load()}>Actualiser</button>
+        <button type="button" className="btn btn-ghost-dark px-4 py-2 text-sm" onClick={() => load()}>Actualiser</button>
       </div>
+      <MailDiagnostic />
       {data === undefined ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-bordeaux-700 border-t-transparent" />
@@ -547,7 +647,7 @@ function MenuPanel() {
             {editingId ? "Modifier le plat" : "Ajouter un plat"}
           </h2>
           {editingId ? (
-            <button type="button" className="btn btn-ghost px-4 py-2 text-sm" onClick={resetForm}>
+            <button type="button" className="btn btn-ghost-dark px-4 py-2 text-sm" onClick={resetForm}>
               Annuler la modification
             </button>
           ) : null}
@@ -771,7 +871,7 @@ function EventsPanel() {
             Sur l&apos;accueil, seuls les événements dans les 7 prochains jours (non passés) sont affichés.
           </p>
         </div>
-        <button type="button" className="btn btn-ghost shrink-0 px-4 py-2 text-sm" onClick={addEvent}>
+        <button type="button" className="btn btn-ghost-dark shrink-0 px-4 py-2 text-sm" onClick={addEvent}>
           Ajouter un événement
         </button>
       </div>
@@ -1103,7 +1203,7 @@ function ReviewsPanel() {
       <div className="rounded-2xl border border-creme-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-xl text-ardoise-900">{editingId ? "Modifier l'avis" : "Ajouter un avis"}</h2>
-          {editingId ? <button type="button" className="btn btn-ghost px-4 py-2 text-sm" onClick={resetForm}>Annuler</button> : null}
+          {editingId ? <button type="button" className="btn btn-ghost-dark px-4 py-2 text-sm" onClick={resetForm}>Annuler</button> : null}
         </div>
         <form noValidate className="space-y-4" onSubmit={onSubmit}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1216,7 +1316,7 @@ export default function AdminPage() {
           <h1 className="font-display text-xl text-ardoise-900">Admin — Calirotis</h1>
           <button
             type="button"
-            className="btn btn-ghost px-4 py-2 text-sm"
+            className="btn btn-ghost-dark px-4 py-2 text-sm"
             onClick={() => { fetch("/api/admin/session", { method: "DELETE" }).finally(() => window.location.reload()); }}
           >
             Déconnexion
@@ -1257,4 +1357,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
 

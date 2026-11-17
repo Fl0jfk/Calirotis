@@ -34,7 +34,7 @@ type QuotePayload = {
   desserts_labels: string[];
   message?: string;
 };
-type SendResult = { ok?: boolean; saved?: boolean; mailed?: boolean };
+type SendResult = { ok?: boolean; saved?: boolean; mailed?: boolean; customerMailed?: boolean };
 
 const PHONE_DISPLAY = "06.02.20.85.40";
 const PHONE_TEL = "0602208540";
@@ -351,7 +351,7 @@ export default function DevisPage() {
         message: message.trim() ? message : undefined,
       };
       const result = await sendDevis({ ...payload, website, form_started_at: formStartedAt });
-      setMailSent(result.mailed !== false);
+      setMailSent(result.customerMailed !== false);
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {

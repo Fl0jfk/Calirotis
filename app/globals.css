@@ -82,6 +82,9 @@ body::-webkit-scrollbar {
   .btn-ghost {
     @apply border-white/50 bg-transparent text-white hover:border-white/80 hover:bg-white/10;
   }
+  .btn-ghost-dark {
+    @apply border-ardoise-400 bg-white text-ardoise-800 hover:border-ardoise-700 hover:bg-ardoise-100;
+  }
   .card {
     @apply overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl;
   }
@@ -520,3 +523,4 @@ div[mapboxgl-children] {
 @media (prefers-reduced-motion: reduce) {
   .pig-ready, .cta-ready, .confetti { animation: none; }
 }
+
