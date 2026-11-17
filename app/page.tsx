@@ -8,7 +8,8 @@ import mariageImg from "./assets/Mariage.webp";
 import businessImg from "./assets/Business.webp";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
-import { PhotoCollage } from "./components/PhotoCollage";
+import { RotisserieScene } from "./components/RotisserieScene";
+import { MomentsMontage } from "./components/MomentsMontage";
 import { getBlurDataURL } from "./lib/image-placeholder";
 import { ReviewsCarousel } from "./components/ReviewsCarousel";
 type MenuCategoryNorm = "starter" | "main_dish" | "dessert";
@@ -137,13 +138,14 @@ export default function HomePage() {
               visibleMarkets.length > 0 ? "flex justify-center px-0 pt-2 max-sm:pt-9 sm:px-6" : "flex justify-center px-0 max-sm:pt-5 sm:px-6"
             }
           >
-            <PhotoCollage />
+            <RotisserieScene>
+              <div className="broche-label">
+                <span>Cuisson lente à la broche</span>
+              </div>
+            </RotisserieScene>
           </div>
           <div className="mt-6 pb-4 md:mt-8">
-          <div className="broche-label">
-            <span>Cuisson lente à la broche</span>
-          </div>
-            <p className="mb-3 font-hand text-2xl text-ardoise-300 pt-8">Rôtisserie événementielle</p>
+            <p className="mb-3 font-hand text-2xl text-ardoise-300 pt-4">Rôtisserie événementielle</p>
             <p className="mb-8 max-w-2xl font-body text-lg leading-relaxed text-ardoise-300 mx-auto px-6">
               Cochon de lait, méchoui et barbecue géant pour vos événements privés ou pros.
               Une cuisine conviviale, généreuse et cuite lentement, avec des produits frais et
@@ -215,6 +217,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      <MomentsMontage />
       <section id="menu" className="bg-white py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-14 text-center">

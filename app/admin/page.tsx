@@ -929,7 +929,8 @@ function CollagePanel() {
         <div>
           <h2 className="font-display text-2xl text-ardoise-900">Photocollage</h2>
           <p className="mt-1 text-sm text-ardoise-600">
-            Entre <strong>{COLLAGE_MIN}</strong> et <strong>{COLLAGE_MAX}</strong> photos. Lignes avec image :{" "}
+            Ces photos s&apos;affichent dans la section « Nos moments » de la page d&apos;accueil. Entre{" "}
+            <strong>{COLLAGE_MIN}</strong> et <strong>{COLLAGE_MAX}</strong> photos. Lignes avec image :{" "}
             <strong>{filledCount}</strong> · emplacements : <strong>{photos.length}</strong>
           </p>
         </div>
@@ -953,10 +954,10 @@ function CollagePanel() {
             <div key={photo.id} className="rounded-xl border border-creme-200 bg-white p-4">
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div>
-                  <label className="form-label">Texte alternatif</label>
+                  <label className="form-label">Légende (affichée sous la photo)</label>
                   <input
                     className="form-input"
-                    placeholder="Description courte pour l'accessibilité"
+                    placeholder="Ex : Mariage de Léa & Tom, Évreux"
                     value={photo.alt}
                     onChange={(e) => updatePhoto(idx, { alt: e.target.value })}
                   />
