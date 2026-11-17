@@ -33,7 +33,7 @@ const data = {
       url: SITE_URL,
       image: `${SITE_URL}/og-image.jpg`,
       logo: `${SITE_URL}/Logo.png`,
-      telephone: "+33699512290",
+      telephone: "+33602208540",
       email: "calirotis@gmail.com",
       address: {
         "@type": "PostalAddress",
@@ -78,4 +78,5 @@ export function JsonLd() {
     />
   );
 }
+
 

@@ -179,12 +179,19 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid grid-cols-1 items-center gap-16 md:grid-cols-2">
             <div className="relative flex justify-center">
-              <div className="relative">
-                <Image src="/Logo.png" alt="Calirotis" className="drop-shadow-xl" width={300} height={300}/>
-                <div className="absolute -bottom-4 -right-4 rounded-2xl bg-safran-500 px-5 py-3 text-white shadow-lg">
+              <div className="relative w-full md:w-[122%] md:max-w-none md:shrink-0">
+                <Image
+                  src="/martin-rotisserie.webp"
+                  alt="Martin, rôtisseur Calirotis, montre son tablier à côté d'un cochon de lait qui grille à la broche"
+                  width={1100}
+                  height={711}
+                  sizes="(max-width: 768px) 92vw, 660px"
+                  className="h-auto w-full drop-shadow-xl"
+                />
+                <div className="absolute -bottom-3 right-2 rounded-2xl bg-safran-500 px-5 py-3 text-white shadow-lg md:right-[10%] md:-bottom-4">
                   <p className="font-hand text-lg font-bold">Devis gratuit !</p>
                 </div>
-                <div className="absolute -left-4 -top-4 rounded-2xl bg-bordeaux-700 px-4 py-2 text-white shadow-lg">
+                <div className="absolute left-0 top-2 rounded-2xl bg-bordeaux-700 px-4 py-2 text-white shadow-lg sm:-left-4 sm:-top-2">
                   <p className="font-hand text-base">Fait maison</p>
                 </div>
               </div>
@@ -452,7 +459,7 @@ export default function HomePage() {
             <Link href="/devis" className="btn btn-braise px-10 py-4 text-base">
               Demander un devis gratuit
             </Link>
-            <a href="tel:0699512290" className="btn btn-white px-8 py-4 text-base">📞 06.99.51.22.90</a>
+            <a href="tel:0602208540" className="btn btn-white px-8 py-4 text-base">📞 06.02.20.85.40</a>
           </div>
         </div>
       </section>
@@ -460,4 +467,8 @@ export default function HomePage() {
     </div>
   );
 }
+
+
+
+
 

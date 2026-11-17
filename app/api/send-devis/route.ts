@@ -345,9 +345,14 @@ export async function POST(req: Request) {
   }
   const startedAt = Number(body.form_started_at);
   const elapsed = Date.now() - startedAt;
+  // Délai de remplissage : un vrai visiteur dont la page est restée ouverte (ou trop ancienne) doit voir une
+  // erreur claire, pas un faux « envoyé » qui ferait perdre sa demande.
   if (!Number.isFinite(startedAt) || elapsed < MIN_FILL_MS || elapsed > MAX_FORM_AGE_MS) {
-    console.warn("[send-devis] bot bloqué (délai de remplissage)", elapsed);
-    return NextResponse.json({ ok: true });
+    console.warn("[send-devis] envoi refusé (délai de remplissage)", elapsed);
+    return fail(
+      "Le formulaire a expiré ou a été envoyé trop vite. Merci de recharger la page puis de renvoyer votre demande, ou de nous appeler au 06.02.20.85.40.",
+      400,
+    );
   }
   if (rateLimited(clientIp(req))) {
     return fail("Trop de demandes envoyées. Merci de réessayer dans quelques minutes ou de nous appeler.", 429);
@@ -413,9 +418,10 @@ export async function POST(req: Request) {
 
   if (!saved && !mailed) {
     return fail(
-      "Votre demande n'a pas pu être envoyée suite à un problème technique. Merci de nous appeler au 06.99.51.22.90.",
+      "Votre demande n'a pas pu être envoyée suite à un problème technique. Merci de nous appeler au 06.02.20.85.40.",
       500,
     );
   }
   return NextResponse.json({ ok: true, id: newQuote.id, saved, mailed });
 }
+

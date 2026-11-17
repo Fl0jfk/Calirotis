@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
@@ -48,24 +48,31 @@ async function fetchMenu() {
   return (await r.json()) as MenuData;
 }
 
-async function sendDevis(body: Record<string, unknown>) {
+type SendResult = { ok?: boolean; saved?: boolean; mailed?: boolean };
+
+async function sendDevis(body: Record<string, unknown>): Promise<SendResult> {
   const r = await fetch("/api/send-devis", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!r.ok) {
-    let msg = "";
+  if (r.ok) {
     try {
-      const j = (await r.json()) as { error?: string };
-      msg = j.error || "";
+      return (await r.json()) as SendResult;
     } catch {
-      /* réponse non JSON */
+      return {};
     }
-    throw new Error(
-      msg || "Votre demande n'a pas pu être envoyée. Merci de réessayer ou de nous appeler au 06.99.51.22.90.",
-    );
   }
+  let msg = "";
+  try {
+    const j = (await r.json()) as { error?: string };
+    msg = j.error || "";
+  } catch {
+    /* réponse non JSON */
+  }
+  throw new Error(
+    msg || "Votre demande n'a pas pu être envoyée. Merci de réessayer ou de nous appeler au 06.02.20.85.40.",
+  );
 }
 
 function buildNameMap(items: MenuItem[]): Record<string, string> {
@@ -166,7 +173,13 @@ export default function DevisPage() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [mailSent, setMailSent] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (errorMsg) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [errorMsg]);
   // Anti-bot : champ piège invisible + heure d'ouverture du formulaire.
   const [website, setWebsite] = useState("");
   const [formStartedAt] = useState(() => Date.now());
@@ -223,7 +236,8 @@ export default function DevisPage() {
         desserts_labels: dessertsLabels,
         message: message.trim() ? message : undefined,
       };
-      await sendDevis({ ...payload, website, form_started_at: formStartedAt });
+      const result = await sendDevis({ ...payload, website, form_started_at: formStartedAt });
+      setMailSent(result.mailed !== false);
       setSuccess(true);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Erreur d’envoi");
@@ -251,7 +265,11 @@ export default function DevisPage() {
             <div className="animate-fade-in rounded-3xl border border-green-200 bg-green-50 p-10 text-center">
               <div className="mb-4 text-6xl">🍖🎉</div>
               <h2 className="mb-2 font-display text-3xl text-green-800">Votre demande est envoyée !</h2>
-              <p className="font-body text-green-700">On vous recontacte dans les plus brefs délais.</p>
+              <p className="font-body text-green-700">
+                {mailSent
+                  ? "Un e-mail de confirmation vient de vous être envoyé. On vous recontacte dans les plus brefs délais."
+                  : "Votre demande est bien enregistrée (pas d'e-mail de confirmation cette fois). On vous recontacte dans les plus brefs délais."}
+              </p>
             </div>
           ) : (
             <form
@@ -442,7 +460,7 @@ export default function DevisPage() {
                 </label>
               </div>
               {errorMsg ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div ref={errorRef} role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {errorMsg}
                 </div>
               ) : null}
@@ -461,8 +479,8 @@ export default function DevisPage() {
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="font-hand text-xl font-bold text-ardoise-700">Une question avant de réserver ?</p>
           <p className="mt-1 text-sm text-ardoise-500">Appelez-nous directement, on vous conseille avec plaisir.</p>
-          <a href="tel:0699512290" className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border-2 border-bordeaux-600 bg-bordeaux-700 px-8 py-3.5 font-body text-base font-semibold text-white shadow-md transition-colors hover:bg-bordeaux-800">
-            📞 06.99.51.22.90
+          <a href="tel:0602208540" className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border-2 border-bordeaux-600 bg-bordeaux-700 px-8 py-3.5 font-body text-base font-semibold text-white shadow-md transition-colors hover:bg-bordeaux-800">
+            📞 06.02.20.85.40
           </a>
         </div>
       </section>
@@ -470,3 +488,4 @@ export default function DevisPage() {
     </div>
   );
 }
+

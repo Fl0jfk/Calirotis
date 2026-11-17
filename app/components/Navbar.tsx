@@ -155,12 +155,12 @@ export function Navbar({ announcement }: NavbarProps) {
             TikTok
           </a>
           <a
-            href="tel:0699512290"
+            href="tel:0602208540"
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4 font-display text-2xl font-semibold text-safran-300 no-underline transition-colors hover:bg-white/20"
           >
             <span className="text-2xl">📞</span>
-            06.99.51.22.90
+            06.02.20.85.40
           </a>
         </div>
         <div className="shrink-0 border-t border-white/10 px-6 py-6">
@@ -170,3 +170,4 @@ export function Navbar({ announcement }: NavbarProps) {
     </nav>
   );
 }
+

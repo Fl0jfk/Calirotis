@@ -57,10 +57,10 @@ export function Footer() {
             <ul className="m-0 flex list-none flex-col gap-3 p-0">
               <li>
                 <a
-                  href="tel:0699512290"
+                  href="tel:0602208540"
                   className="flex items-center gap-2 font-body text-sm text-ardoise-400 transition-colors hover:text-bordeaux-300"
                 >
-                  📞 06.99.51.22.90
+                  📞 06.02.20.85.40
                 </a>
               </li>
               <li>
@@ -99,3 +99,4 @@ export function Footer() {
     </footer>
   );
 }
+
