@@ -216,10 +216,6 @@ export async function POST(req: Request) {
       400,
     );
   }
-  if (rateLimited(clientIp(req))) {
-    return fail("Trop de demandes envoyées. Merci de réessayer dans quelques minutes ou de nous appeler.", 429);
-  }
-
   const lastName = str(body.last_name, 100);
   const firstName = str(body.first_name, 100);
   const email = str(body.email, 200);
@@ -231,6 +227,16 @@ export async function POST(req: Request) {
   if (!EMAIL_RE.test(email)) return fail("Adresse e-mail invalide.");
   if ((phone.match(/\d/g) || []).length < 8) return fail("Numéro de téléphone invalide.");
   if (!Number.isFinite(people) || people < 1 || people > 10000) return fail("Nombre de personnes invalide.");
+  const eventDate = str(body.event_date, 30);
+  const eventPlace = str(body.event_place, 300);
+  if (!eventDate || eventPlace.length < 2) return fail("Merci d'indiquer la date et le lieu de votre événement.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || Number.isNaN(new Date(`${eventDate}T12:00:00Z`).getTime())) {
+    return fail("Date de l'événement invalide.");
+  }
+  // un jour de marge : le fuseau horaire du visiteur peut avoir une journée d'écart avec le serveur
+  if (new Date(`${eventDate}T12:00:00Z`).getTime() < Date.now() - 36 * 60 * 60 * 1000) {
+    return fail("La date de l'événement ne peut pas être dans le passé.");
+  }
   if (looksLikeSpam([lastName, firstName, message, str(body.event_place, 300)])) {
     console.warn("[send-devis] bot bloqué (contenu suspect)");
     return NextResponse.json({ ok: true });
@@ -242,8 +248,8 @@ export async function POST(req: Request) {
     first_name: firstName,
     phone,
     email,
-    event_date: str(body.event_date, 30),
-    event_place: str(body.event_place, 300),
+    event_date: eventDate,
+    event_place: eventPlace,
     number_of_people: people,
     starters: strList(body.starters),
     starters_labels: strList(body.starters_labels),
@@ -264,7 +270,7 @@ export async function POST(req: Request) {
   }
   inFlight.add(lockKey);
   try {
-    return await handleQuote(newQuote);
+    return await handleQuote(newQuote, clientIp(req));
   } finally {
     inFlight.delete(lockKey);
   }
@@ -278,7 +284,7 @@ async function persist(st: StorageContext, change: (quotes: QuoteRequest[]) => Q
   await saveQuotes(st, { quotes: change(fresh.quotes) });
 }
 
-async function handleQuote(newQuote: QuoteRequest) {
+async function handleQuote(newQuote: QuoteRequest, ip: string) {
   const st = getStorage();
   if (!st) console.error("[send-devis] stockage non configuré", storageConfigErrorJson().debug);
 
@@ -323,6 +329,11 @@ async function handleQuote(newQuote: QuoteRequest) {
       console.error("[send-devis] statut des e-mails non mis à jour", e);
     }
     return NextResponse.json({ ok: true, duplicate: true, saved: true, mailed: resend.admin, customerMailed: resend.customer });
+  }
+
+  // Anti-abus : la limite ne compte que les vraies demandes (ni erreurs de saisie, ni doublons).
+  if (rateLimited(ip)) {
+    return fail("Trop de demandes envoyées depuis votre connexion. Merci de réessayer dans quelques minutes ou de nous appeler au 06.02.20.85.40.", 429);
   }
 
   // Demande modifiée par le même client : elle remplace la précédente (et remonte en tête de liste).

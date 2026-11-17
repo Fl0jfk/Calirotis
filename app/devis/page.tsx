@@ -235,6 +235,7 @@ export default function DevisPage() {
   const [eventDate, setEventDate] = useState("");
   const [eventPlace, setEventPlace] = useState("");
   const [numberOfPeople, setNumberOfPeople] = useState("");
+  const [today, setToday] = useState("");
   const [mainDish, setMainDish] = useState("");
   const [starters, setStarters] = useState<string[]>([]);
   const [desserts, setDesserts] = useState<string[]>([]);
@@ -275,6 +276,11 @@ export default function DevisPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const d = new Date();
+    setToday(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+  }, []);
+
   // Si ce visiteur a déjà envoyé une demande récemment : on le rassure au lieu de le laisser insister.
   useEffect(() => {
     try {
@@ -309,6 +315,8 @@ export default function DevisPage() {
     { label: "prénom", ok: firstName.trim().length > 0 },
     { label: "téléphone", ok: (phone.match(/\d/g) || []).length >= 8 },
     { label: "e-mail", ok: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) },
+    { label: "date", ok: eventDate !== "" },
+    { label: "lieu", ok: eventPlace.trim().length >= 2 },
     { label: "nombre de personnes", ok: (parseInt(numberOfPeople, 10) || 0) >= 1 },
     ...(mainItems.length > 0 ? [{ label: "plat principal", ok: Boolean(mainDish) }] : []),
   ];
@@ -319,6 +327,18 @@ export default function DevisPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting || submittingRef.current) return;
+    if (!eventDate) {
+      setErrorMsg("Merci d'indiquer la date de votre événement.");
+      return;
+    }
+    if (today && eventDate < today) {
+      setErrorMsg("La date de l'événement ne peut pas être dans le passé.");
+      return;
+    }
+    if (eventPlace.trim().length < 2) {
+      setErrorMsg("Merci d'indiquer le lieu de votre événement.");
+      return;
+    }
     const n = parseInt(numberOfPeople, 10);
     if (!n || n < 1) {
       setErrorMsg("Veuillez indiquer un nombre de personnes valide.");
@@ -466,12 +486,12 @@ export default function DevisPage() {
                 <StepCard n={2} title="Votre événement" hint="Mariage, anniversaire, séminaire… racontez-nous.">
                   <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="min-w-0">
-                      <label className="form-label" htmlFor="d-date">Date de l&apos;événement</label>
-                      <input id="d-date" className="form-input box-border block w-full min-w-0 max-w-full" type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+                      <label className="form-label" htmlFor="d-date">Date de l&apos;événement *</label>
+                      <input id="d-date" className="form-input box-border block w-full min-w-0 max-w-full" type="date" required min={today || undefined} value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
                     </div>
                     <div className="min-w-0">
-                      <label className="form-label" htmlFor="d-lieu">Lieu</label>
-                      <input id="d-lieu" className="form-input box-border block w-full min-w-0 max-w-full" value={eventPlace} onChange={(e) => setEventPlace(e.target.value)} placeholder="Salle des fêtes, Paris 75001…" />
+                      <label className="form-label" htmlFor="d-lieu">Lieu *</label>
+                      <input id="d-lieu" className="form-input box-border block w-full min-w-0 max-w-full" required autoComplete="off" value={eventPlace} onChange={(e) => setEventPlace(e.target.value)} placeholder="Salle des fêtes, Paris 75001…" />
                     </div>
                   </div>
                   <div className="mt-4">
