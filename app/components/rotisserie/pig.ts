@@ -80,14 +80,13 @@ export function createPig() {
   root.add(body);
 
   const skin = toon("#ffffff", { map: skinTexture(), spec: 0.0 });
-  const golden = toon("#c98428", { spec: 0.0 });
-  const innerEar = toon("#b9582c", { spec: 0.0 });
-  const snoutMat = toon("#f2a58a", { spec: 0.0 });
-  const hoofMat = toon("#7c4119", { spec: 0.0 });
+  const golden = toon("#e0982f", { spec: 0.0 });
+  const innerEar = toon("#e98a78", { spec: 0.0 });
+  const snoutMat = toon("#f0a08e", { spec: 0.0 });
+  const hoofMat = toon("#5a2f16", { spec: 0.0 });
   const steel = toon("#c4cbd3", { spec: 0.9, shininess: 55 });
   const nutMat = toon("#9aa3ad", { spec: 0.8, shininess: 45 });
   const wood = toon("#8b552b", { spec: 0.0 });
-  const rope = toon("#d8bf88", { spec: 0.0 });
   const inkBasic = new THREE.MeshBasicMaterial({ color: INK });
 
   // --- Corps + tête : révolution autour de l'axe de la broche -------------------------
@@ -226,15 +225,6 @@ export function createPig() {
   ]);
   body.add(inked(new THREE.TubeGeometry(tailCurve, 50, 0.065, 10), golden, { width: 3.5 }));
 
-  // --- Ficelle de boucher -------------------------------------------------------------------
-  for (const a of [0.1, -0.95]) {
-    const ring = inked(new THREE.TorusGeometry(radiusAt(a) + 0.005, 0.032, 10, 72).rotateY(Math.PI / 2), rope, {
-      width: 2.5,
-    });
-    ring.position.x = a;
-    body.add(ring);
-  }
-
   // --- Broche, disque d'arrêt, manivelle ---------------------------------------------------------
   const spit = inked(new THREE.CylinderGeometry(0.08, 0.08, 8.1, 20).rotateZ(-Math.PI / 2), steel, {
     width: 3.5,
@@ -264,6 +254,9 @@ export function createPig() {
 
   return root;
 }
+
+
+
 
 
 

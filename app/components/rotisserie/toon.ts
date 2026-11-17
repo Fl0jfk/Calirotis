@@ -123,7 +123,7 @@ export function inked(
   return group;
 }
 
-/** Texture de peau de cochon rôti : dorée, cloques, brunissements, reflets, peinte à la main. */
+/** Peau « à plat » façon illustration : grands aplats nets, sans détail réaliste. */
 export function skinTexture() {
   const W = 1024;
   const H = 512;
@@ -131,83 +131,30 @@ export function skinTexture() {
   c.width = W;
   c.height = H;
   const ctx = c.getContext("2d")!;
-  let seed = 7;
-  const rnd = () => {
-    seed = (seed * 16807) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
 
-  const base = ctx.createLinearGradient(0, 0, 0, H);
-  base.addColorStop(0, "#8a4614");
-  base.addColorStop(0.5, "#c27a24");
-  base.addColorStop(1, "#a35c1a");
-  ctx.fillStyle = base;
+  ctx.fillStyle = "#eaac3c";
   ctx.fillRect(0, 0, W, H);
 
-  const wrap = (fn: (dx: number) => void) => [-W, 0, W].forEach(fn);
+  // Bande bords ondulés : x0..x1 (en fraction de W), vagues le long du corps
+  const band = (x0: number, x1: number, color: string, amp: number, phase: number) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let y = 0; y <= H; y += 8) {
+      const x = (x0 + Math.sin(y / 46 + phase) * amp) * W;
+      y === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    for (let y = H; y >= 0; y -= 8) {
+      ctx.lineTo((x1 + Math.sin(y / 38 + phase + 2) * amp) * W, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  };
 
-  // grandes plaques brunies
-  for (let i = 0; i < 38; i++) {
-    const x = rnd() * W;
-    const y = rnd() * H;
-    const r = 40 + rnd() * 90;
-    wrap((dx) => {
-      const g = ctx.createRadialGradient(x + dx, y, 0, x + dx, y, r);
-      g.addColorStop(0, "rgba(110,44,10,0.7)");
-      g.addColorStop(1, "rgba(140,62,16,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.ellipse(x + dx, y, r, r * 0.8, 0, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-  // zones claires, dorées
-  for (let i = 0; i < 30; i++) {
-    const x = rnd() * W;
-    const y = rnd() * H;
-    const r = 30 + rnd() * 70;
-    wrap((dx) => {
-      const g = ctx.createRadialGradient(x + dx, y, 0, x + dx, y, r);
-      g.addColorStop(0, "rgba(255,206,110,0.22)");
-      g.addColorStop(1, "rgba(255,214,120,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(x + dx, y, r, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-  // cloques de la peau croustillante : bord sombre + cœur clair
-  for (let i = 0; i < 520; i++) {
-    const x = rnd() * W;
-    const y = rnd() * H;
-    const r = 5 + rnd() * 11;
-    wrap((dx) => {
-      ctx.fillStyle = "rgba(122,52,12,0.42)";
-      ctx.beginPath();
-      ctx.ellipse(x + dx + 1.5, y + 2, r, r * 0.82, 0.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,214,120,0.16)";
-      ctx.beginPath();
-      ctx.ellipse(x + dx - 1, y - 1.5, r * 0.62, r * 0.46, 0.4, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-  // petites craquelures
-  ctx.strokeStyle = "rgba(95,40,10,0.45)";
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  for (let i = 0; i < 90; i++) {
-    const x = rnd() * W;
-    const y = rnd() * H;
-    const a = rnd() * Math.PI;
-    const l = 10 + rnd() * 22;
-    wrap((dx) => {
-      ctx.beginPath();
-      ctx.moveTo(x + dx, y);
-      ctx.quadraticCurveTo(x + dx + Math.cos(a) * l * 0.5, y + Math.sin(a) * l * 0.7, x + dx + Math.cos(a) * l, y + Math.sin(a) * l);
-      ctx.stroke();
-    });
-  }
+  // ventre : doré clair
+  band(0.12, 0.4, "#f7c552", 0.018, 0.4);
+  // dos : rôti plus foncé, puis cœur encore plus foncé
+  band(0.58, 0.93, "#cf8429", 0.02, 1.6);
+  band(0.67, 0.84, "#b86d1f", 0.016, 3.1);
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -215,7 +162,6 @@ export function skinTexture() {
   tex.anisotropy = 4;
   return tex;
 }
-
 export function barkTexture() {
   const c = document.createElement("canvas");
   c.width = 256;
@@ -274,6 +220,8 @@ export function glowTexture(inner: string, outer = "rgba(0,0,0,0)") {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+
+
 
 
 

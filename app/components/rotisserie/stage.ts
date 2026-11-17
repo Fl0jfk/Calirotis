@@ -8,20 +8,20 @@ export function createStage() {
   const root = new THREE.Group();
 
   // --- sol : terre battue + liseré d'herbe ------------------------------------------------------
-  const earth = toon("#5a3f2e", { spec: 0.1 });
+  const earth = toon("#6b1d1d", { spec: 0.0 });
   const ground = inked(new THREE.CylinderGeometry(4.6, 4.8, 0.4, 72), earth, { width: 5, cast: false });
   ground.scale.z = 0.46;
   ground.position.y = GROUND_Y - 0.2;
   root.add(ground);
 
-  const grassMat = toon("#3f7a35", { spec: 0.1 });
+  const grassMat = toon("#3a3f48", { spec: 0.0 });
   const grass = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 0.06, 72), grassMat);
   grass.scale.z = 0.46;
   grass.position.y = GROUND_Y + 0.01;
   grass.receiveShadow = true;
   root.add(grass);
 
-  const ash = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.08, 48), toon("#2a1d16", { spec: 0 }));
+  const ash = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.08, 48), toon("#22252b", { spec: 0 }));
   ash.scale.z = 0.5;
   ash.position.y = GROUND_Y + 0.04;
   ash.receiveShadow = true;
@@ -118,5 +118,6 @@ export function createStage() {
 
   return { root, embers, poolMat };
 }
+
 
 
