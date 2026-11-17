@@ -168,7 +168,7 @@ export function skinTexture() {
     const r = 30 + rnd() * 70;
     wrap((dx) => {
       const g = ctx.createRadialGradient(x + dx, y, 0, x + dx, y, r);
-      g.addColorStop(0, "rgba(255,206,110,0.45)");
+      g.addColorStop(0, "rgba(255,206,110,0.22)");
       g.addColorStop(1, "rgba(255,214,120,0)");
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -186,7 +186,7 @@ export function skinTexture() {
       ctx.beginPath();
       ctx.ellipse(x + dx + 1.5, y + 2, r, r * 0.82, 0.4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "rgba(255,214,120,0.38)";
+      ctx.fillStyle = "rgba(255,214,120,0.16)";
       ctx.beginPath();
       ctx.ellipse(x + dx - 1, y - 1.5, r * 0.62, r * 0.46, 0.4, 0, Math.PI * 2);
       ctx.fill();
@@ -274,6 +274,7 @@ export function glowTexture(inner: string, outer = "rgba(0,0,0,0)") {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+
 
 
 

@@ -106,7 +106,7 @@ export function MomentsMontage() {
 
         <div
           ref={gridRef}
-          className="grid grid-cols-2 gap-x-5 gap-y-8 pb-6 md:flex md:flex-wrap md:items-start md:justify-center md:gap-x-8 md:gap-y-10"
+          className="grid grid-cols-2 items-start gap-x-5 gap-y-9 pb-6 md:flex md:flex-wrap md:items-start md:justify-center md:gap-x-8 md:gap-y-10"
         >
           {photos.map((p, i) => {
             const k = i % WIDTHS.length;
@@ -126,8 +126,8 @@ export function MomentsMontage() {
                 className={`montage-card group relative text-left ${shown ? "montage-in" : "montage-pre"}`}
                 aria-label={`Agrandir la photo : ${caption ?? p.alt}`}
               >
-                <span className="montage-tape" aria-hidden />
-                <span className="block rounded-md border-4 border-[#1a1a1a] bg-creme-50 p-2 shadow-[6px_6px_0_#111] transition-shadow duration-300 group-hover:shadow-[9px_9px_0_#111]">
+                <span className="relative block rounded-md border-4 border-[#1a1a1a] bg-creme-50 p-2 shadow-[6px_6px_0_#111] transition-shadow duration-300 group-hover:shadow-[9px_9px_0_#111]">
+                  <span className="montage-tape" aria-hidden />
                   <span className="relative block overflow-hidden rounded-sm border-2 border-[#1a1a1a]" style={{ aspectRatio: ASPECTS[k] }}>
                     <Image
                       src={p.src}
@@ -217,4 +217,6 @@ export function MomentsMontage() {
     </section>
   );
 }
+
+
 

@@ -33,7 +33,7 @@ export function createStage() {
   for (let i = 0; i < count; i++) {
     const t = (i / count) * Math.PI * 2;
     const size = 0.34 + (i % 3) * 0.05;
-    const stone = inked(new THREE.DodecahedronGeometry(size, 0), toon(stoneColors[i % 4], { spec: 0.25 }), { width: 4 });
+    const stone = inked(new THREE.DodecahedronGeometry(size, 0), toon(stoneColors[i % 4], { spec: 0.0 }), { width: 4 });
     stone.position.set(Math.cos(t) * 2.25, GROUND_Y + size * 0.55, Math.sin(t) * 1.15);
     stone.scale.set(1.15, 0.8, 1);
     stone.rotation.set(i * 0.7, i * 1.3, i * 0.4);
@@ -88,8 +88,8 @@ export function createStage() {
   root.add(pool);
 
   // --- supports métalliques en A ---------------------------------------------------------------------------
-  const steel = toon("#7b8a98", { spec: 0.7, shininess: 45 });
-  const dark = toon("#4a5560", { spec: 0.5 });
+  const steel = toon("#7b8a98", { spec: 0.3, shininess: 45 });
+  const dark = toon("#4a5560", { spec: 0.15 });
   for (const side of [-1, 1]) {
     const cx = side * SUPPORT_X;
     const top = new THREE.Vector3(cx, -0.14, 0);
@@ -118,4 +118,5 @@ export function createStage() {
 
   return { root, embers, poolMat };
 }
+
 

@@ -360,6 +360,11 @@ div[mapboxgl-children] {
 }
 @media (min-width: 768px) {
   .montage-card {
+    width: calc(var(--w, 256px) * 0.78);
+  }
+}
+@media (min-width: 1024px) {
+  .montage-card {
     width: var(--w, 256px);
   }
 }
@@ -380,14 +385,22 @@ div[mapboxgl-children] {
 .montage-tape {
   position: absolute;
   left: 50%;
-  top: -12px;
+  top: -15px;
   z-index: 2;
-  width: 76px;
-  height: 24px;
-  transform: translateX(-50%) rotate(-4deg);
+  width: 72px;
+  height: 22px;
+  transform: translateX(-50%) rotate(-3deg);
   background: rgba(249, 184, 39, 0.92);
   border: 2px solid #1a1a1a;
   box-shadow: 2px 2px 0 #111;
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  .montage-tape {
+    top: -13px;
+    width: 52px;
+    height: 17px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .montage-card,
@@ -399,3 +412,5 @@ div[mapboxgl-children] {
     transform: translateY(var(--dy, 0)) rotate(var(--r, 0deg));
   }
 }
+
+

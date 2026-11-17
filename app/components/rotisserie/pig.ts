@@ -79,15 +79,15 @@ export function createPig() {
   body.scale.setScalar(1.15);
   root.add(body);
 
-  const skin = toon("#ffffff", { map: skinTexture(), spec: 0.5, shininess: 80 });
-  const golden = toon("#c98428", { spec: 0.5, shininess: 36 });
-  const innerEar = toon("#b9582c", { spec: 0.2 });
-  const snoutMat = toon("#f2a58a", { spec: 0.6, shininess: 30 });
-  const hoofMat = toon("#7c4119", { spec: 0.5, shininess: 24 });
+  const skin = toon("#ffffff", { map: skinTexture(), spec: 0.0 });
+  const golden = toon("#c98428", { spec: 0.0 });
+  const innerEar = toon("#b9582c", { spec: 0.0 });
+  const snoutMat = toon("#f2a58a", { spec: 0.0 });
+  const hoofMat = toon("#7c4119", { spec: 0.0 });
   const steel = toon("#c4cbd3", { spec: 0.9, shininess: 55 });
   const nutMat = toon("#9aa3ad", { spec: 0.8, shininess: 45 });
-  const wood = toon("#8b552b", { spec: 0.3 });
-  const rope = toon("#d8bf88", { spec: 0.05 });
+  const wood = toon("#8b552b", { spec: 0.0 });
+  const rope = toon("#d8bf88", { spec: 0.0 });
   const inkBasic = new THREE.MeshBasicMaterial({ color: INK });
 
   // --- Corps + tête : révolution autour de l'axe de la broche -------------------------
@@ -264,6 +264,7 @@ export function createPig() {
 
   return root;
 }
+
 
 
 
