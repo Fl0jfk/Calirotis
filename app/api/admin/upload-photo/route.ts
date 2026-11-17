@@ -1,12 +1,11 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { isAdminRequest } from "../../../../lib/admin-auth";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
 
 function isAdminAuthorized(req: Request): boolean {
-  const expected = process.env.ADMIN_API_KEY || "";
-  if (!expected) return true;
-  return req.headers.get("x-admin-key") === expected;
+  return isAdminRequest(req);
 }
 
 async function signedPut(st: StorageContext, key: string, contentType: string) {
@@ -93,3 +92,4 @@ export async function POST(req: Request) {
   devLog("OK, objet écrit", { objectKey, photoUrl });
   return NextResponse.json({ photo_url: photoUrl });
 }
+

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
+import { WalkingPig } from "../components/WalkingPig";
 
 type MenuItem = {
   id: string;
@@ -32,8 +34,15 @@ type QuotePayload = {
   desserts_labels: string[];
   message?: string;
 };
+type SendResult = { ok?: boolean; saved?: boolean; mailed?: boolean };
 
-function menuJsonUrl() {return "/api/public/menu";}
+const PHONE_DISPLAY = "06.02.20.85.40";
+const PHONE_TEL = "0602208540";
+const GUEST_SHORTCUTS = [20, 50, 80, 100, 150];
+
+function menuJsonUrl() {
+  return "/api/public/menu";
+}
 
 function normalizeMenuCategory(raw: string): "starter" | "main_dish" | "dessert" {
   const lower = raw.trim().toLowerCase().replace(/-/g, "_");
@@ -47,8 +56,6 @@ async function fetchMenu() {
   if (!r.ok) return null;
   return (await r.json()) as MenuData;
 }
-
-type SendResult = { ok?: boolean; saved?: boolean; mailed?: boolean };
 
 async function sendDevis(body: Record<string, unknown>): Promise<SendResult> {
   const r = await fetch("/api/send-devis", {
@@ -70,9 +77,7 @@ async function sendDevis(body: Record<string, unknown>): Promise<SendResult> {
   } catch {
     /* réponse non JSON */
   }
-  throw new Error(
-    msg || "Votre demande n'a pas pu être envoyée. Merci de réessayer ou de nous appeler au 06.02.20.85.40.",
-  );
+  throw new Error(msg || `Votre demande n'a pas pu être envoyée. Merci de réessayer ou de nous appeler au ${PHONE_DISPLAY}.`);
 }
 
 function buildNameMap(items: MenuItem[]): Record<string, string> {
@@ -83,54 +88,136 @@ function buildNameMap(items: MenuItem[]): Record<string, string> {
   return out;
 }
 
+function StepCard({ n, title, hint, children }: { n: number; title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="devis-card min-w-0 rounded-3xl border-4 border-[#1a1a1a] bg-white p-5 shadow-[6px_6px_0_#111] sm:p-8">
+      <header className="mb-6 flex items-start gap-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[3px] border-[#1a1a1a] bg-safran-400 font-display text-xl text-ardoise-900 shadow-[2px_2px_0_#111]">
+          {n}
+        </span>
+        <div className="min-w-0">
+          <h2 className="font-display text-2xl leading-tight text-ardoise-900 sm:text-3xl">{title}</h2>
+          {hint ? <p className="mt-1 font-body text-sm text-ardoise-600">{hint}</p> : null}
+        </div>
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function ProgressTrack({ fraction, remaining }: { fraction: number; remaining: number }) {
+  const [walking, setWalking] = useState(false);
+  const [stuck, setStuck] = useState(false);
+  const prev = useRef(fraction);
+  const anchor = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (fraction === prev.current) return;
+    prev.current = fraction;
+    setWalking(true);
+    const id = window.setTimeout(() => setWalking(false), 900);
+    return () => window.clearTimeout(id);
+  }, [fraction]);
+
+  // Le site masque le défilement horizontal sur body, ce qui neutralise "sticky" : on affiche une copie fixe
+  // dès que la barre d'origine sort de l'écran par le haut.
+  useEffect(() => {
+    const el = anchor.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => setStuck(!e.isIntersecting && e.boundingClientRect.top < 0),
+      { rootMargin: "-70px 0px 0px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const ready = fraction >= 1;
+  const content = (
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-1 flex items-center justify-between font-body text-xs font-semibold text-ardoise-700 sm:text-sm">
+        <span>{ready ? "C'est prêt, il ne reste qu'à envoyer !" : `Plus que ${remaining} champ${remaining > 1 ? "s" : ""} à remplir`}</span>
+        <span className="font-display text-base text-bordeaux-700">{Math.round(fraction * 100)} %</span>
+      </div>
+      <div className="relative h-[46px]">
+        <div
+          className={`absolute bottom-[6px] z-10 transition-[left] duration-700 ease-out ${walking ? "pig-walking" : ""} ${ready && !walking ? "pig-ready" : ""}`}
+          style={{ left: `calc((100% - 56px) * ${fraction})`, width: 56 }}
+        >
+          <WalkingPig width={56} />
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-[6px] overflow-hidden rounded-full border-2 border-[#1a1a1a] bg-white">
+          <div className="h-full rounded-full bg-gradient-to-r from-safran-400 to-bordeaux-600 transition-[width] duration-700 ease-out" style={{ width: `${fraction * 100}%` }} />
+        </div>
+        <span className="absolute -bottom-1 right-0 text-xl" aria-hidden>
+          🍽️
+        </span>
+      </div>
+    </div>
+  );
+  return (
+    <>
+      <div ref={anchor}>{content}</div>
+      <div
+        aria-hidden={!stuck}
+        className={`fixed inset-x-0 top-16 z-30 border-b-2 border-[#1a1a1a]/20 bg-creme-50/95 px-6 pb-2 pt-2 backdrop-blur transition-transform duration-300 md:top-20 ${stuck ? "translate-y-0" : "pointer-events-none -translate-y-[160%]"}`}
+      >
+        {content}
+      </div>
+    </>
+  );
+}
+
 function PickTile({
   item,
   selected,
-  selectedFrame,
-  idleFrame,
   onPick,
 }: {
   item: MenuItem;
   selected: boolean;
-  selectedFrame: string;
-  idleFrame: string;
   onPick: () => void;
 }) {
-  const frame = selected ? selectedFrame : idleFrame;
   return (
     <button
       type="button"
       onClick={onPick}
-      className={`flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl bg-white text-left shadow-sm transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bordeaux-500 focus-visible:ring-offset-2 ${frame}`}
+      aria-pressed={selected}
+      className={`group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border-[3px] bg-white text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-safran-400/60 ${
+        selected
+          ? "-translate-y-0.5 border-bordeaux-700 shadow-[4px_4px_0_#8b1a1a]"
+          : "border-[#1a1a1a] hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#111]"
+      }`}
     >
-      <div className="relative aspect-[5/3] w-full shrink-0 bg-gradient-to-br from-creme-100 to-creme-200">
+      <div className="relative aspect-[4/3] w-full shrink-0 bg-gradient-to-br from-creme-100 to-creme-200">
         {item.photo_url ? (
           <Image
             src={item.photo_url}
             alt={item.name}
             fill
             unoptimized={item.photo_url.startsWith("/api/")}
-            className="object-cover"
-            sizes="(max-width: 640px) 45vw, 200px"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 45vw, 220px"
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-2xl text-ardoise-300" aria-hidden>
+          <span className="flex h-full w-full items-center justify-center text-3xl" aria-hidden>
             🍽️
           </span>
         )}
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5 sm:p-3">
-        <span className="font-body text-xs font-semibold leading-snug text-ardoise-800 sm:text-sm">
-          {item.name}
+        <span
+          aria-hidden
+          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-[#1a1a1a] text-base font-bold transition-all duration-200 ${
+            selected ? "scale-100 bg-bordeaux-700 text-white" : "scale-75 bg-white/90 text-transparent opacity-80"
+          }`}
+        >
+          ✓
         </span>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-1 p-3">
+        <span className="font-hand text-[17px] font-bold leading-snug text-ardoise-900">{item.name}</span>
         {item.description?.trim() ? (
-          <span className="line-clamp-3 font-body text-[11px] leading-snug text-ardoise-500 sm:text-xs">
-            {item.description}
-          </span>
+          <span className="line-clamp-3 font-body text-xs leading-snug text-ardoise-600 sm:text-[13px]">{item.description}</span>
         ) : null}
-        {normalizeMenuCategory(item.category) === "main_dish" &&
-        item.partner_url?.trim() &&
-        item.partner_name?.trim() ? (
+        {normalizeMenuCategory(item.category) === "main_dish" && item.partner_url?.trim() && item.partner_name?.trim() ? (
           <a
             href={item.partner_url}
             target="_blank"
@@ -166,7 +253,7 @@ export default function DevisPage() {
   const [email, setEmail] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventPlace, setEventPlace] = useState("");
-  const [numberOfPeople, setNumberOfPeople] = useState("10");
+  const [numberOfPeople, setNumberOfPeople] = useState("50");
   const [mainDish, setMainDish] = useState("");
   const [starters, setStarters] = useState<string[]>([]);
   const [desserts, setDesserts] = useState<string[]>([]);
@@ -175,11 +262,8 @@ export default function DevisPage() {
   const [success, setSuccess] = useState(false);
   const [mailSent, setMailSent] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [rating, setRating] = useState<{ avg: number; total: number } | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (errorMsg) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [errorMsg]);
   // Anti-bot : champ piège invisible + heure d'ouverture du formulaire.
   const [website, setWebsite] = useState("");
   const [formStartedAt] = useState(() => Date.now());
@@ -190,15 +274,45 @@ export default function DevisPage() {
       const m = await fetchMenu();
       if (ok) setMenu(m ?? { items: [] });
     })();
+    fetch("/api/public/reviews")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { reviews?: { rating: number }[] } | null) => {
+        const list = d?.reviews;
+        if (ok && Array.isArray(list) && list.length > 0) {
+          setRating({ avg: list.reduce((s, r) => s + r.rating, 0) / list.length, total: list.length });
+        }
+      })
+      .catch(() => {});
     return () => {
       ok = false;
     };
   }, []);
 
+  useEffect(() => {
+    if (errorMsg) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [errorMsg]);
+
   function toggleId(list: string[], id: string, set: (v: string[]) => void) {
     if (list.includes(id)) set(list.filter((x) => x !== id));
     else set([...list, id]);
   }
+
+  const data = menu;
+  const starterItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "starter") ?? [];
+  const mainItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "main_dish") ?? [];
+  const dessertItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "dessert") ?? [];
+
+  const checks = [
+    lastName.trim().length > 0,
+    firstName.trim().length > 0,
+    (phone.match(/\d/g) || []).length >= 8,
+    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()),
+    (parseInt(numberOfPeople, 10) || 0) >= 1,
+    ...(mainItems.length > 0 ? [Boolean(mainDish)] : []),
+  ];
+  const doneCount = checks.filter(Boolean).length;
+  const fraction = doneCount / checks.length;
+  const remaining = checks.length - doneCount;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -210,7 +324,7 @@ export default function DevisPage() {
     }
     const hasMainDishes = (data?.items ?? []).some((i) => normalizeMenuCategory(i.category) === "main_dish");
     if (hasMainDishes && !mainDish) {
-      setErrorMsg("Veuillez choisir un plat principal.");
+      setErrorMsg("Veuillez choisir un plat principal : touchez une des photos de l'étape 3.");
       return;
     }
     setSubmitting(true);
@@ -239,253 +353,216 @@ export default function DevisPage() {
       const result = await sendDevis({ ...payload, website, form_started_at: formStartedAt });
       setMailSent(result.mailed !== false);
       setSuccess(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Erreur d’envoi");
     }
     setSubmitting(false);
   }
-  const data = menu;
-  const starterItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "starter") ?? [];
-  const mainItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "main_dish") ?? [];
-  const dessertItems = data?.items.filter((i) => normalizeMenuCategory(i.category) === "dessert") ?? [];
+
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-creme-50 text-ardoise-800">
       <Navbar />
-      <main className="flex-1 pb-16 pt-24">
+      <main className="flex-1 pb-16 pt-20 md:pt-24">
         <div className="mx-auto min-w-0 max-w-3xl px-6">
-          <div className="mb-12 rounded-3xl bg-gradient-to-br from-ardoise-800 via-ardoise-800 to-bordeaux-900 px-6 py-10 text-center shadow-lg">
-            <span className="section-label mb-3 block text-bordeaux-300">Gratuit & sans engagement</span>
-            <h1 className="mb-4 font-display text-4xl text-white md:text-5xl">Votre devis 🍽️</h1>
-            <p className="mx-auto max-w-xl font-body text-ardoise-200">
-              Décrivez votre événement et composez votre menu. On vous répond rapidement avec une proposition
-              personnalisée.
+          <div className="relative mb-8 overflow-hidden rounded-3xl border-4 border-[#1a1a1a] bg-gradient-to-br from-ardoise-800 via-ardoise-800 to-bordeaux-800 px-6 py-10 text-center shadow-[6px_6px_0_#111] sm:py-12">
+            <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-safran-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-12 -left-10 h-48 w-48 rounded-full bg-bordeaux-700/40 blur-3xl" />
+            <span className="section-label relative mb-3 block text-safran-400">Gratuit & sans engagement</span>
+            <h1 className="relative mb-4 font-display text-4xl leading-tight text-white md:text-5xl">
+              Votre devis, <span className="text-safran-400">sur mesure</span> 🍽️
+            </h1>
+            <p className="relative mx-auto max-w-xl font-body text-base text-white/90 sm:text-lg">
+              Quelques clics : dites-nous tout sur votre événement et composez votre menu. On vous répond rapidement avec une proposition personnalisée.
             </p>
+            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2">
+              {["Gratuit", "Sans engagement", "Réponse rapide"].map((t) => (
+                <span key={t} className="rounded-full border-2 border-[#1a1a1a] bg-creme-50 px-3 py-1 font-body text-xs font-bold text-ardoise-900 sm:text-sm">
+                  ✔ {t}
+                </span>
+              ))}
+              {rating ? (
+                <span className="rounded-full border-2 border-[#1a1a1a] bg-safran-400 px-3 py-1 font-body text-xs font-bold text-ardoise-900 sm:text-sm">
+                  ★ {rating.avg.toFixed(1).replace(".", ",")} · {rating.total} avis Google
+                </span>
+              ) : null}
+            </div>
           </div>
+
           {success ? (
-            <div className="animate-fade-in rounded-3xl border border-green-200 bg-green-50 p-10 text-center">
-              <div className="mb-4 text-6xl">🍖🎉</div>
-              <h2 className="mb-2 font-display text-3xl text-green-800">Votre demande est envoyée !</h2>
-              <p className="font-body text-green-700">
+            <div className="animate-fade-in relative overflow-hidden rounded-3xl border-4 border-[#1a1a1a] bg-white p-8 text-center shadow-[6px_6px_0_#111] sm:p-12">
+              <span className="confetti confetti-1" aria-hidden>🔥</span>
+              <span className="confetti confetti-2" aria-hidden>✨</span>
+              <span className="confetti confetti-3" aria-hidden>🐖</span>
+              <span className="confetti confetti-4" aria-hidden>✨</span>
+              <span className="confetti confetti-5" aria-hidden>🔥</span>
+              <div className="pig-walking mx-auto mb-4 flex w-fit justify-center">
+                <WalkingPig width={110} />
+              </div>
+              <h2 className="mb-2 font-display text-3xl text-ardoise-900 sm:text-4xl">Votre demande est partie !</h2>
+              <p className="mx-auto max-w-md font-body text-ardoise-700">
                 {mailSent
-                  ? "Un e-mail de confirmation vient de vous être envoyé. On vous recontacte dans les plus brefs délais."
-                  : "Votre demande est bien enregistrée (pas d'e-mail de confirmation cette fois). On vous recontacte dans les plus brefs délais."}
+                  ? "Un e-mail de confirmation avec le récapitulatif vient de vous être envoyé (pensez à regarder vos courriers indésirables). Martin revient vers vous très vite."
+                  : "Votre demande est bien enregistrée (nous n'avons pas pu vous envoyer d'e-mail de confirmation cette fois). Martin revient vers vous très vite."}
               </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link href="/" className="btn btn-braise px-8 py-3 text-base">Retour à l&apos;accueil</Link>
+                <a href={`tel:${PHONE_TEL}`} className="btn btn-outline border-[3px] border-[#1a1a1a] px-8 py-3 text-base text-ardoise-900 hover:bg-safran-100 hover:text-ardoise-900">
+                  📞 {PHONE_DISPLAY}
+                </a>
+              </div>
             </div>
           ) : (
-            <form
-              onSubmit={onSubmit}
-              className="devis-form min-w-0 space-y-8 rounded-3xl bg-white p-6 shadow-lg max-sm:p-5 max-sm:[&_.form-input]:text-base max-sm:[&_.form-input]:leading-normal"
-            >
-              <fieldset className="min-w-0 space-y-5">
-                <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">
-                  Vos coordonnées
-                </legend>
-                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                  <div className="min-w-0">
-                    <label className="form-label">Nom *</label>
-                    <input
-                      className="form-input box-border block w-full min-w-0 max-w-full"
-                      required
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Dupont"
-                    />
+            <form onSubmit={onSubmit} className="devis-form min-w-0">
+              <ProgressTrack fraction={fraction} remaining={remaining} />
+              <div className="mt-6 space-y-6">
+                <StepCard n={1} title="Qui êtes-vous ?" hint="Pour que Martin puisse vous répondre.">
+                  <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <label className="form-label" htmlFor="d-nom">Nom *</label>
+                      <input id="d-nom" className="form-input box-border block w-full min-w-0 max-w-full" required autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Dupont" />
+                    </div>
+                    <div className="min-w-0">
+                      <label className="form-label" htmlFor="d-prenom">Prénom *</label>
+                      <input id="d-prenom" className="form-input box-border block w-full min-w-0 max-w-full" required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Marie" />
+                    </div>
+                    <div className="min-w-0">
+                      <label className="form-label" htmlFor="d-tel">Téléphone *</label>
+                      <input id="d-tel" className="form-input box-border block w-full min-w-0 max-w-full" type="tel" inputMode="tel" autoComplete="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 00 00 00 00" />
+                    </div>
+                    <div className="min-w-0">
+                      <label className="form-label" htmlFor="d-mail">E-mail *</label>
+                      <input id="d-mail" className="form-input box-border block w-full min-w-0 max-w-full" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="marie@example.fr" />
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <label className="form-label">Prénom *</label>
-                    <input
-                      className="form-input box-border block w-full min-w-0 max-w-full"
-                      required
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="Marie"
-                    />
+                </StepCard>
+
+                <StepCard n={2} title="Votre événement" hint="Mariage, anniversaire, séminaire… racontez-nous.">
+                  <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <label className="form-label" htmlFor="d-date">Date de l&apos;événement</label>
+                      <input id="d-date" className="form-input box-border block w-full min-w-0 max-w-full" type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+                    </div>
+                    <div className="min-w-0">
+                      <label className="form-label" htmlFor="d-lieu">Lieu</label>
+                      <input id="d-lieu" className="form-input box-border block w-full min-w-0 max-w-full" value={eventPlace} onChange={(e) => setEventPlace(e.target.value)} placeholder="Salle des fêtes, Paris 75001…" />
+                    </div>
                   </div>
-                </div>
-                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                  <div className="min-w-0">
-                    <label className="form-label">Téléphone *</label>
-                    <input
-                      className="form-input box-border block w-full min-w-0 max-w-full"
-                      type="tel"
-                      value={phone}
-                      required
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="06 00 00 00 00"
-                    />
+                  <div className="mt-4">
+                    <label className="form-label" htmlFor="d-nb">Nombre de personnes *</label>
+                    <input id="d-nb" className="form-input box-border block w-full min-w-0 max-w-full sm:max-w-[200px]" type="number" inputMode="numeric" min={1} required value={numberOfPeople} onChange={(e) => setNumberOfPeople(e.target.value)} />
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {GUEST_SHORTCUTS.map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setNumberOfPeople(String(n))}
+                          className={`rounded-full border-2 border-[#1a1a1a] px-3.5 py-1.5 font-body text-sm font-bold transition-colors ${
+                            numberOfPeople === String(n) ? "bg-bordeaux-700 text-white" : "bg-creme-50 text-ardoise-900 hover:bg-safran-100"
+                          }`}
+                        >
+                          {n} pers.
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <label className="form-label">Email *</label>
-                    <input
-                      className="form-input box-border block w-full min-w-0 max-w-full"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="marie@example.fr"
-                    />
-                  </div>
-                </div>
-              </fieldset>
-              <hr className="border-creme-200" />
-              <fieldset className="min-w-0 space-y-5 w-full">
-                <legend className="mb-1 font-hand text-2xl font-bold text-ardoise-800">Votre événement</legend>
-                <div className="min-w-0 space-y-5 w-full">
-                  <div className="w-full min-w-0">
-                    <label className="form-label">Date de l&apos;événement</label>
-                    <input
-                      className="form-input box-border block w-full min-w-0 max-w-full"
-                      type="date"
-                      value={eventDate}
-                      onChange={(e) => setEventDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="w-full min-w-0">
-                    <label className="form-label">Nombre de personnes *</label>
-                    <input
-                      className="form-input box-border block w-full min-w-0 max-w-full"
-                      type="number"
-                      min={1}
-                      required
-                      value={numberOfPeople}
-                      onChange={(e) => setNumberOfPeople(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="form-label">Lieu de l&apos;événement</label>
-                  <input
-                    className="form-input box-border block w-full min-w-0 max-w-full"
-                    value={eventPlace}
-                    onChange={(e) => setEventPlace(e.target.value)}
-                    placeholder="Salle des fêtes, Paris 75001..."
+                </StepCard>
+
+                <StepCard n={3} title="Composez votre menu" hint="Touchez une photo pour la choisir. Le plat principal est obligatoire, le reste est facultatif.">
+                  {menu === undefined ? (
+                    <div className="flex justify-center py-8">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-bordeaux-700 border-t-transparent" />
+                    </div>
+                  ) : menu === null ? (
+                    <p className="py-4 text-sm font-semibold text-bordeaux-700">
+                      Impossible de charger la carte (réseau ou configuration). Vous pouvez décrire votre menu dans le message ci-dessous.
+                    </p>
+                  ) : menu.items.length === 0 ? (
+                    <p className="py-4 text-sm italic text-ardoise-600">La carte n&apos;est pas encore disponible. Précisez vos souhaits dans le message ci-dessous.</p>
+                  ) : (
+                    <div className="space-y-8">
+                      {mainItems.length > 0 ? (
+                        <div>
+                          <p className="mb-3 font-hand text-xl font-bold text-ardoise-900">🍲 Plat principal * <span className="font-body text-sm font-normal text-ardoise-600">(un seul choix)</span></p>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            {mainItems.map((item) => (
+                              <PickTile key={item.id} item={item} selected={mainDish === item.id} onPick={() => setMainDish(item.id)} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      {starterItems.length > 0 ? (
+                        <div>
+                          <p className="mb-3 font-hand text-xl font-bold text-ardoise-900">🥗 Entrées <span className="font-body text-sm font-normal text-ardoise-600">(plusieurs choix possibles{starters.length ? ` · ${starters.length} choisie${starters.length > 1 ? "s" : ""}` : ""})</span></p>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            {starterItems.map((item) => (
+                              <PickTile key={item.id} item={item} selected={starters.includes(item.id)} onPick={() => toggleId(starters, item.id, setStarters)} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      {dessertItems.length > 0 ? (
+                        <div>
+                          <p className="mb-3 font-hand text-xl font-bold text-ardoise-900">🍮 Desserts <span className="font-body text-sm font-normal text-ardoise-600">(plusieurs choix possibles{desserts.length ? ` · ${desserts.length} choisi${desserts.length > 1 ? "s" : ""}` : ""})</span></p>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            {dessertItems.map((item) => (
+                              <PickTile key={item.id} item={item} selected={desserts.includes(item.id)} onPick={() => toggleId(desserts, item.id, setDesserts)} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                </StepCard>
+
+                <StepCard n={4} title="Un mot de plus ?" hint="Allergies, demandes particulières, style de service… (facultatif)">
+                  <textarea
+                    className="form-input box-border block min-h-[110px] w-full min-w-0 max-w-full resize-y"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Dites-nous tout : on s'adapte !"
+                    aria-label="Message complémentaire"
                   />
+                </StepCard>
+
+                <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+                  <label>
+                    Ne pas remplir
+                    <input type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                  </label>
                 </div>
-              </fieldset>
-              <hr className="border-creme-200" />
-              <fieldset>
-                <legend className="mb-4 font-hand text-2xl font-bold text-ardoise-800">
-                  Composition du menu 🍖
-                </legend>
-                {menu === undefined ? (
-                  <div className="flex justify-center py-8">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-bordeaux-700 border-t-transparent" />
+
+                {errorMsg ? (
+                  <div ref={errorRef} role="alert" className="rounded-2xl border-[3px] border-[#1a1a1a] bg-red-50 px-5 py-4 font-body text-sm font-semibold text-red-800 shadow-[4px_4px_0_#111]">
+                    {errorMsg}
                   </div>
-                ) : menu === null ? (
-                  <p className="py-4 text-sm text-red-600">
-                    Impossible de charger la carte (réseau ou configuration). Vous pouvez décrire
-                    votre menu dans le message.
+                ) : null}
+
+                <div className="text-center">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className={`btn btn-braise w-full justify-center border-[3px] border-[#1a1a1a] py-5 text-lg shadow-[5px_5px_0_#111] ${fraction >= 1 && !submitting ? "cta-ready" : ""}`}
+                  >
+                    {submitting ? "Envoi en cours…" : "🔥 Envoyer ma demande de devis"}
+                  </button>
+                  <p className="mt-3 font-body text-sm text-ardoise-700">
+                    🔒 Gratuit et sans engagement. Vos informations servent uniquement à vous répondre.
                   </p>
-                ) : menu.items.length === 0 ? (
-                  <p className="py-4 text-sm italic text-ardoise-500">
-                    La carte n&apos;est pas encore disponible. Précisez vos souhaits dans le message.
+                  <p className="mt-1 font-body text-sm text-ardoise-700">
+                    Plutôt par téléphone ? <a href={`tel:${PHONE_TEL}`} className="font-bold text-bordeaux-700 underline underline-offset-2">{PHONE_DISPLAY}</a>
                   </p>
-                ) : (
-                  <div className="space-y-6">
-                    {starterItems.length > 0 ? (
-                      <div>
-                        <p className="form-label">🥗 Entrées (choix multiples)</p>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                          {starterItems.map((item) => (
-                            <PickTile
-                              key={item.id}
-                              item={item}
-                              selected={starters.includes(item.id)}
-                              selectedFrame="ring-2 ring-bordeaux-400 border border-bordeaux-600"
-                              idleFrame="border border-creme-200 hover:border-bordeaux-200"
-                              onPick={() => toggleId(starters, item.id, setStarters)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                    {mainItems.length > 0 ? (
-                      <div>
-                        <p className="form-label">🍲 Plat principal *</p>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                          {mainItems.map((item) => (
-                            <PickTile
-                              key={item.id}
-                              item={item}
-                              selected={mainDish === item.id}
-                              selectedFrame="ring-2 ring-bordeaux-500 border border-bordeaux-700"
-                              idleFrame="border border-creme-200 hover:border-bordeaux-200"
-                              onPick={() => setMainDish(item.id)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                    {dessertItems.length > 0 ? (
-                      <div>
-                        <p className="form-label">🍮 Desserts (choix multiples)</p>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                          {dessertItems.map((item) => (
-                            <PickTile
-                              key={item.id}
-                              item={item}
-                              selected={desserts.includes(item.id)}
-                              selectedFrame="ring-2 ring-bordeaux-400 border border-bordeaux-600"
-                              idleFrame="border border-creme-200 hover:border-bordeaux-200"
-                              onPick={() => toggleId(desserts, item.id, setDesserts)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              </fieldset>
-              <hr className="border-creme-200" />
-              <div>
-                <label className="form-label">Message complémentaire</label>
-                <textarea
-                  className="form-input box-border block w-full min-w-0 max-w-full min-h-[100px] resize-y"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Allergies, demandes particulières, style de service..."
-                />
-              </div>
-              <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
-                <label>
-                  Ne pas remplir
-                  <input
-                    type="text"
-                    name="website"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                  />
-                </label>
-              </div>
-              {errorMsg ? (
-                <div ref={errorRef} role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {errorMsg}
                 </div>
-              ) : null}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="btn btn-braise w-full justify-center py-4 text-base"
-              >
-                {submitting ? "Envoi en cours..." : "🍽️ Envoyer ma demande de devis"}
-              </button>
+              </div>
             </form>
           )}
         </div>
       </main>
-      <section className="border-t border-creme-200 bg-gradient-to-b from-creme-50 to-white py-10">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <p className="font-hand text-xl font-bold text-ardoise-700">Une question avant de réserver ?</p>
-          <p className="mt-1 text-sm text-ardoise-500">Appelez-nous directement, on vous conseille avec plaisir.</p>
-          <a href="tel:0602208540" className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border-2 border-bordeaux-600 bg-bordeaux-700 px-8 py-3.5 font-body text-base font-semibold text-white shadow-md transition-colors hover:bg-bordeaux-800">
-            📞 06.02.20.85.40
-          </a>
-        </div>
-      </section>
       <Footer />
     </div>
   );
 }
+
+
+
 

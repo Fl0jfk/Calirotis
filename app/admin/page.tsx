@@ -259,7 +259,6 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         setError(j.error || "Mot de passe incorrect");
         return;
       }
-      localStorage.setItem("admin_auth", "1");
       onSuccess();
     } catch {
       setError("Impossible de joindre le serveur.");
@@ -1194,8 +1193,10 @@ export default function AdminPage() {
   const [auth, setAuth] = useState<boolean | null>(null);
   const [tab, setTab] = useState<"quotes" | "menu" | "market" | "collage" | "reviews">("quotes");
   useEffect(() => {
-    setAuth(localStorage.getItem("admin_auth") === "1");
     setTab(initialTab());
+    fetch("/api/admin/session", { cache: "no-store" })
+      .then((r) => setAuth(r.ok))
+      .catch(() => setAuth(false));
   }, []);
   useEffect(() => {
     if (auth) localStorage.setItem(TAB_KEY, tab);
@@ -1216,7 +1217,7 @@ export default function AdminPage() {
           <button
             type="button"
             className="btn btn-ghost px-4 py-2 text-sm"
-            onClick={() => { localStorage.removeItem("admin_auth"); window.location.reload(); }}
+            onClick={() => { fetch("/api/admin/session", { method: "DELETE" }).finally(() => window.location.reload()); }}
           >
             Déconnexion
           </button>
@@ -1256,3 +1257,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

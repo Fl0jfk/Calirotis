@@ -89,7 +89,7 @@ body::-webkit-scrollbar {
     @apply mb-1.5 block text-sm font-semibold font-body text-ardoise-700;
   }
   .form-input {
-    @apply w-full rounded-2xl border-2 border-creme-200 bg-white px-4 py-2.5 text-sm font-body text-ardoise-800 outline-none transition-colors duration-150 placeholder:text-ardoise-400 focus:border-bordeaux-600 focus:ring-4 focus:ring-bordeaux-200/65;
+    @apply w-full rounded-2xl border-2 border-creme-200 bg-white px-4 py-2.5 text-sm font-body text-ardoise-800 outline-none transition-colors duration-150 placeholder:text-ardoise-500 focus:border-bordeaux-600 focus:ring-4 focus:ring-bordeaux-200/65;
   }
   .form-input-select {
     @apply h-12 min-h-[3rem] py-0 text-base leading-normal;
@@ -480,4 +480,43 @@ div[mapboxgl-children] {
   .pig-walking .pig-leg-b,
   .pig-walking .pig-bob,
   .pig-tail { animation: none; }
+}
+
+.pig-ready {
+  animation: pigReady 1.6s ease-in-out infinite;
+}
+@keyframes pigReady {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-9px); }
+}
+
+.cta-ready {
+  animation: ctaPulse 2.4s ease-in-out infinite;
+}
+@keyframes ctaPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); box-shadow: 5px 5px 0 #111, 0 0 28px rgba(215, 69, 58, 0.55); }
+}
+
+.confetti {
+  position: absolute;
+  bottom: 18%;
+  font-size: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  animation: confettiUp 3.2s ease-out forwards;
+}
+.confetti-1 { left: 12%; animation-delay: 0.1s; }
+.confetti-2 { left: 28%; animation-delay: 0.45s; }
+.confetti-3 { left: 50%; animation-delay: 0.2s; }
+.confetti-4 { left: 70%; animation-delay: 0.6s; }
+.confetti-5 { left: 86%; animation-delay: 0.3s; }
+@keyframes confettiUp {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(-190px) rotate(18deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pig-ready, .cta-ready, .confetti { animation: none; }
 }

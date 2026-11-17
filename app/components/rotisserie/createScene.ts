@@ -21,7 +21,7 @@ export function createRotisserieScene(host: HTMLElement, { reducedMotion = false
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   const dpr = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2);
   renderer.setPixelRatio(dpr);
   const canvas = renderer.domElement;
@@ -202,6 +202,7 @@ export function createRotisserieScene(host: HTMLElement, { reducedMotion = false
 
   return dispose;
 }
+
 
 
 

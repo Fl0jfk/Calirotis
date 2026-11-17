@@ -1,4 +1,5 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { isAdminRequest } from "../../../../lib/admin-auth";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
@@ -10,9 +11,7 @@ type MarketsData = { markets: MarketEntry[] };
 type LegacyMarket = { date?: string | null; place?: string | null; active?: boolean };
 
 function isAdminAuthorized(req: Request): boolean {
-  const expected = process.env.ADMIN_API_KEY || "";
-  if (!expected) return true;
-  return req.headers.get("x-admin-key") === expected;
+  return isAdminRequest(req);
 }
 
 async function signedGet(st: StorageContext, key: string) {
@@ -111,3 +110,4 @@ export async function GET(req: Request) {
   }
   return NextResponse.json(await loadMarket(st));
 }
+

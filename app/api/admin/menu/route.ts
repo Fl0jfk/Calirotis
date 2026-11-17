@@ -1,4 +1,5 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { isAdminRequest } from "../../../../lib/admin-auth";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../../lib/storage-env";
@@ -52,9 +53,7 @@ function menuWithRewrittenPhotos(data: MenuData, st: StorageContext): MenuData {
 }
 
 function isAdminAuthorized(req: Request): boolean {
-  const expected = process.env.ADMIN_API_KEY || "";
-  if (!expected) return true;
-  return req.headers.get("x-admin-key") === expected;
+  return isAdminRequest(req);
 }
 
 async function signedGet(st: StorageContext, key: string) { return getSignedUrl(st.s3, new GetObjectCommand({ Bucket: st.bucket, Key: key }), { expiresIn: 60 })}
@@ -210,3 +209,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ error: "Action inconnue" }, { status: 400 });
 }
+

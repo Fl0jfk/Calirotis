@@ -3,6 +3,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { getStorage, storageConfigErrorJson, type StorageContext } from "../../../lib/storage-env";
+import { buildQuoteEmails } from "../../../lib/quote-emails";
 
 const KEY = "quotes.json";
 
@@ -80,88 +81,6 @@ function quoteId() {
   return `q_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function formatList(values: string[]): string {
-  return values.filter(Boolean).join(", ") || "Aucun";
-}
-
-function escapeHtml(value: string): string {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-}
-
-function createEmailLayout(params: {
-  title: string;
-  intro: string;
-  infoRowsHtml: string;
-  menuRowsHtml: string;
-  messageHtml: string;
-}) {
-  const logoUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()
-    ? `${process.env.NEXT_PUBLIC_SITE_URL.trim().replace(/\/$/, "")}/Logo.png`
-    : "";
-  const safeLogoUrl = escapeHtml(logoUrl);
-  return `
-    <div style="margin:0; padding:0; background:#fff7f0; font-family: Arial, Helvetica, sans-serif; color:#2c1c0f;">
-      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="padding:24px 10px;">
-        <tr>
-          <td align="center">
-            <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="width:100%; max-width:640px; background:#ffffff; border-radius:16px; border:1px solid #f3dcc8; overflow:hidden;">
-              <tr>
-                <td style="padding:24px; background:linear-gradient(135deg, #ffedd5, #ffe4cc); border-bottom:1px solid #f3dcc8;">
-                  ${
-                    safeLogoUrl
-                      ? `<img src="${safeLogoUrl}" alt="Logo Calirotis" width="120" style="display:block; margin:0 auto 12px auto;" />`
-                      : ""
-                  }
-                  <p style="margin:0; text-align:center; color:#92400e; font-size:13px; letter-spacing:0.04em; text-transform:uppercase;">Calirotis</p>
-                  <h1 style="margin:10px 0 0 0; text-align:center; font-size:24px; line-height:1.3; color:#7c2d12;">${escapeHtml(params.title)}</h1>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:24px;">
-                  <p style="margin:0 0 18px 0; font-size:15px; line-height:1.6; color:#3f2a17;">${escapeHtml(params.intro)}</p>
-                  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:16px; background:#fffbf8; border:1px solid #f6e5d6; border-radius:12px;">
-                    <tr>
-                      <td style="padding:14px 16px;">
-                        <p style="margin:0 0 10px 0; font-size:14px; font-weight:bold; color:#9a3412;">Informations</p>
-                        ${params.infoRowsHtml}
-                      </td>
-                    </tr>
-                  </table>
-                  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:16px; background:#fffbf8; border:1px solid #f6e5d6; border-radius:12px;">
-                    <tr>
-                      <td style="padding:14px 16px;">
-                        <p style="margin:0 0 10px 0; font-size:14px; font-weight:bold; color:#9a3412;">Repas choisi</p>
-                        ${params.menuRowsHtml}
-                      </td>
-                    </tr>
-                  </table>
-                  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#fffbf8; border:1px solid #f6e5d6; border-radius:12px;">
-                    <tr>
-                      <td style="padding:14px 16px;">
-                        <p style="margin:0 0 10px 0; font-size:14px; font-weight:bold; color:#9a3412;">Message</p>
-                        <p style="margin:0; font-size:14px; line-height:1.6; color:#3f2a17;">${params.messageHtml}</p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:18px 24px; border-top:1px solid #f3dcc8; background:#fff7f0;">
-                  <p style="margin:0 0 6px 0; color:#5f3e1f; font-size:13px;">Calirotis</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </div>
-  `;
-}
-
-function createInfoRow(icon: string, label: string, value: string): string {
-  return `<p style="margin:0 0 8px 0; font-size:14px; line-height:1.5;"><span style="font-size:14px; margin-right:6px;">${icon}</span><strong>${escapeHtml(label)} :</strong> ${escapeHtml(value)}</p>`;
-}
-
 function createMailer() {
   const user = process.env.SMTP_USER?.trim();
   const pass = process.env.SMTP_PASS?.trim();
@@ -187,83 +106,23 @@ function adminRecipients(fallback: string): string {
 
 async function sendQuoteEmails(quote: QuoteRequest) {
   const { user, transporter } = createMailer();
-  const customerName = `${quote.first_name} ${quote.last_name}`.trim();
-  const starters = formatList(quote.starters_labels || []);
-  const mainDish = quote.main_dish_label?.trim() || quote.main_dish;
-  const desserts = formatList(quote.desserts_labels || []);
-  const eventDate = quote.event_date || "Non précisée";
-  const eventPlace = quote.event_place || "Non précisé";
-  const message = quote.message?.trim() || "Aucun message complémentaire.";
-  const messageHtml = escapeHtml(message).replace(/\n/g, "<br />");
-  const createdAt = new Date(quote.created_at).toLocaleString("fr-FR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-
-  const summaryText = [
-    `Nom : ${customerName}`,
-    `Email : ${quote.email}`,
-    `Téléphone : ${quote.phone || "Non renseigné"}`,
-    `Date : ${eventDate}`,
-    `Lieu : ${eventPlace}`,
-    `Nombre de personnes : ${quote.number_of_people || 0}`,
-    `Entrées : ${starters}`,
-    `Plat principal : ${mainDish || "Non renseigné"}`,
-    `Desserts : ${desserts}`,
-    `Message : ${message}`,
-  ].join("\n");
-
-  const infoRowsHtml =
-    createInfoRow("👤", "Nom", customerName || "Non renseigné") +
-    createInfoRow("✉️", "Email", quote.email) +
-    createInfoRow("📞", "Téléphone", quote.phone || "Non renseigné") +
-    createInfoRow("📅", "Date de l'événement", eventDate) +
-    createInfoRow("📍", "Lieu", eventPlace) +
-    createInfoRow("👥", "Nombre de personnes", `${quote.number_of_people || 0}`) +
-    createInfoRow("🕒", "Demande reçue le", createdAt);
-
-  const menuRowsHtml =
-    createInfoRow("🥗", "Entrées", starters) +
-    createInfoRow("🍽️", "Plat principal", mainDish || "Non renseigné") +
-    createInfoRow("🍰", "Desserts", desserts);
-
-  const adminHtml = createEmailLayout({
-    title: "Nouvelle demande de devis",
-    intro: "Une nouvelle demande de devis vient d'être envoyée via le site.",
-    infoRowsHtml,
-    menuRowsHtml,
-    messageHtml
-  });
-
-  const customerHtml = createEmailLayout({
-    title: "Votre demande de devis a bien été reçue",
-    intro: `Bonjour ${quote.first_name}, votre demande est enregistrée. Retrouvez ci-dessous toutes les informations transmises.`,
-    infoRowsHtml,
-    menuRowsHtml,
-    messageHtml
-  });
-
+  const mail = buildQuoteEmails(quote);
   const [adminResult, customerResult] = await Promise.allSettled([
     transporter.sendMail({
       from: `"Calirotis" <${user}>`,
       to: adminRecipients(user),
       replyTo: quote.email,
-      subject: `Nouvelle demande de devis - ${customerName}`,
-      text: `Une nouvelle demande de devis a été reçue.\n\n${summaryText}`,
-      html: adminHtml,
+      subject: mail.adminSubject,
+      text: mail.adminText,
+      html: mail.adminHtml,
     }),
     transporter.sendMail({
       from: `"Calirotis" <${user}>`,
       to: quote.email,
-      subject: "Votre demande de devis a bien été reçue",
-      text:
-        `Bonjour ${quote.first_name},\n\n` +
-        "Merci pour votre demande de devis auprès de Calirotis.\n" +
-        "Nous avons bien reçu votre demande et nous reviendrons vers vous rapidement.\n\n" +
-        "Récapitulatif :\n" +
-        `${summaryText}\n\n` +
-        "A bientôt,\nCalirotis",
-      html: customerHtml,
+      replyTo: adminRecipients(user),
+      subject: mail.customerSubject,
+      text: mail.customerText,
+      html: mail.customerHtml,
     }),
   ]);
   if (customerResult.status === "rejected") {
